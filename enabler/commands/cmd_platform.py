@@ -2,10 +2,14 @@ from enabler.cli import pass_environment, logger
 from enabler.helpers.git import get_submodules, get_repo
 from enabler.type import semver
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
 import click
 import click_spinner
 import git
 import os
+import subprocess as s
 
 # App group of commands
 @click.group('platform', short_help='Platform commands')
@@ -37,6 +41,82 @@ def init(ctx, kube_context, submodules, repopath):
     with click_spinner.spinner():
         repo.submodule_update()
     logger.info('Platform initialized.')
+
+
+@cli.command('info', short_help='Get info on platform')
+@click.pass_context
+@pass_environment
+def info(ctx, kube_context):
+    """Get info on platform and platform components"""
+    kube_context = ctx.kube_context
+
+    try:
+        gw_url = s.run(['kubectl',
+                        '--context',
+                        'kind-' + kube_context,
+                        '-n',
+                        'istio-system',
+                        'get',
+                        'service',
+                        'istio-ingressgateway',
+                        '-o',
+                        'jsonpath={.status.loadBalancer.ingress[0].ip}'],
+                       capture_output=True, check=True)
+        logger.info('Platform can be accessed through the URL:')
+        logger.info(u'\u2023' + ' http://' + gw_url.stdout.decode('utf-8'))
+    except s.CalledProcessError as error:
+        logger.debug(error.stderr.decode('utf-8'))
+        raise click.Abort()
+
+
+# Generate keys
+@cli.command('keys', short_help='Generate keys')
+@click.argument('bits',
+                required=True,
+                default=2048)
+@click.pass_context
+@pass_environment
+def keys(ctx, kube_context, bits):
+    """Generate encryption keys used by the application services"""
+    # Locations, we can argument these if need be
+    keys_dir = 'infrastructure/keys/'
+    private_key_filename = 'key.pem'
+    public_key_filename = 'key.pub'
+
+    # Check if the keys exist and warn user
+    if (
+        os.path.isfile(keys_dir + private_key_filename) or
+        os.path.isfile(keys_dir + public_key_filename)
+       ):
+        if not click.confirm('Keys already exist, overwrite y/n?'):
+            raise click.Abort()
+
+    # Generate the keys using cryptography
+    logger.info('Generating keys...')
+    with click_spinner.spinner():
+        key = rsa.generate_private_key(
+            backend=default_backend(),
+            public_exponent=65537,
+            key_size=bits
+        )
+        private_key = key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption())
+        public_key = key.public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+    # Write the private key
+    f = open(keys_dir + private_key_filename, 'wb')
+    f.write(private_key)
+    f.close()
+
+    # Write the public key
+    f = open(keys_dir + public_key_filename, 'wb')
+    f.write(public_key)
+    f.close()
 
 
 @cli.command('release', short_help='Make a platform release')

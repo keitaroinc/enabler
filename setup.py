@@ -11,7 +11,8 @@ setup(
                       "docker==4.2.0",
                       "gitpython==3.1.1",
                       "paramiko>=2.7.1",
-                      "semver>=2.9.1"],
+                      "semver>=2.9.1",
+                      "cryptography>=2.9.1"],
     entry_points="""
         [console_scripts]
         enabler=enabler.cli:cli
