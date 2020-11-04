@@ -51,8 +51,7 @@ to quickly create a Cobra application.`,
 		if strings.HasPrefix(version[1], "11") {
 			log.Info(string(colors.WHITE), "java jdk 11", util.Okay())
 		} else {
-			log.Error(string(colors.RED), "Java JDK 11 needed, please change the version of java on your machine.")
-			os.Exit(1)
+			log.Fatal(string(colors.RED), "Java JDK 11 needed, please change the version of java on your machine.")
 		}
 
 		// figure out if there's a better way to check for required dependencies???
@@ -62,8 +61,7 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// docker is not present in the system
-			log.Error(string(colors.RED), "docker is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "docker is not present on the machine, terminating...")
 		} else {
 			log.Info(string(colors.WHITE), "docker "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
@@ -72,22 +70,19 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// helm is not present in the system
-			log.Error(string(colors.RED), "helm is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "helm is not present on the machine, terminating...")
 		}
 		if strings.HasPrefix(strings.TrimSpace(string(cmdOut)), "v3") {
 			log.Info(string(colors.WHITE), "helm "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		} else {
-			log.Error(string(colors.RED), "helm 3 needed, please install it on the machine.")
-			os.Exit(1)
+			log.Fatal(string(colors.RED), "helm 3 needed, please install it on the machine.")
 		}
 		// check if kind is present on the system
 		command = exec.Command("kind", "version")
 		cmdOut, err = command.Output()
 		if err != nil {
 			// kind is not present in the system
-			log.Error(string(colors.RED), "kind is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "kind is not present on the machine, terminating...")
 		} else {
 			log.Info(string(colors.WHITE), strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
@@ -96,8 +91,7 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// skaffold is not present in the system
-			log.Error(string(colors.RED), "skaffold is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "skaffold is not present on the machine, terminating...")
 		} else {
 			log.Info(string(colors.WHITE), "skaffold "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
@@ -106,8 +100,7 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// kubectl is not present in the system
-			log.Error(string(colors.RED), "kubectl is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "kubectl is not present on the machine, terminating...")
 		} else {
 			log.Info(string(colors.WHITE), "kubectl "+strings.TrimSpace(strings.ToLower(string(cmdOut))), util.Okay())
 		}
@@ -116,20 +109,17 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// istio is not present in the system
-			log.Error(string(colors.RED), "istioctl is not present on the machine, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "istioctl is not present on the machine, terminating...")
 		}
 		version = strings.Split(strings.TrimSpace(string(cmdOut)), ".")
 		minorVer, err := strconv.Atoi(version[1])
 		if err != nil {
-			log.Error(string(colors.RED), "unable to parse istio version, terminating...")
-			os.Exit(126)
+			log.Fatal(string(colors.RED), "unable to parse istio version, terminating...")
 		}
 		if minorVer >= 5 {
 			log.Info(string(colors.WHITE), "istio "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		} else {
-			log.Error(string(colors.RED), "istio 1.5 or greater needed, please update the version of istio on your machine.")
-			os.Exit(1)
+			log.Fatal(string(colors.RED), "istio 1.5 or greater needed, please update the version of istio on your machine.")
 		}
 	},
 }
