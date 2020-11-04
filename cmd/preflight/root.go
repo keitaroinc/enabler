@@ -16,8 +16,8 @@ limitations under the License.
 package preflight
 
 import (
-	"fmt"
 	"github.com/keitaroinc/enabler/cmd/colors"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -38,19 +38,20 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		// check if java is present on the system
 		command := exec.Command("java", "--version")
 		cmdOut, err := command.Output()
 		if err != nil {
 			// java is not present in the system
-			fmt.Println(string(colors.RED), "java is not present on the machine, terminating...")
+			log.Info(string(colors.RED), "java is not present on the machine, terminating...")
 			os.Exit(126)
 		}
 		version := strings.Split(string(cmdOut), " ")
 		if strings.HasPrefix(version[1], "11") {
-			fmt.Println(string(colors.WHITE), "java jdk 11", string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "java jdk 11", util.Okay())
 		} else {
-			fmt.Println(string(colors.RED), "Java JDK 11 needed, please change the version of java on your machine.")
+			log.Error(string(colors.RED), "Java JDK 11 needed, please change the version of java on your machine.")
 			os.Exit(1)
 		}
 
@@ -60,24 +61,24 @@ to quickly create a Cobra application.`,
 		command = exec.Command("docker", "version", "-f", "{{.Server.Version}}")
 		cmdOut, err = command.Output()
 		if err != nil {
-			// java is not present in the system
-			fmt.Println(string(colors.RED), "docker is not present on the machine, terminating...")
+			// docker is not present in the system
+			log.Error(string(colors.RED), "docker is not present on the machine, terminating...")
 			os.Exit(126)
 		} else {
-			fmt.Println(string(colors.WHITE), "docker "+strings.TrimSpace(string(cmdOut)), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "docker "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
 		// check if helm is present on the system
 		command = exec.Command("helm", "version", "--short")
 		cmdOut, err = command.Output()
 		if err != nil {
-			// java is not present in the system
-			fmt.Println(string(colors.RED), "helm is not present on the machine, terminating...")
+			// helm is not present in the system
+			log.Error(string(colors.RED), "helm is not present on the machine, terminating...")
 			os.Exit(126)
 		}
 		if strings.HasPrefix(strings.TrimSpace(string(cmdOut)), "v3") {
-			fmt.Println(string(colors.WHITE), "helm "+strings.TrimSpace(string(cmdOut)), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "helm "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		} else {
-			fmt.Println(string(colors.RED), "helm 3 needed, please install it on the machine.")
+			log.Error(string(colors.RED), "helm 3 needed, please install it on the machine.")
 			os.Exit(1)
 		}
 		// check if kind is present on the system
@@ -85,49 +86,49 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// kind is not present in the system
-			fmt.Println(string(colors.RED), "kind is not present on the machine, terminating...")
+			log.Error(string(colors.RED), "kind is not present on the machine, terminating...")
 			os.Exit(126)
 		} else {
-			fmt.Println(string(colors.WHITE), strings.TrimSpace(string(cmdOut)), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
 		// check if skaffold is present on the system
 		command = exec.Command("skaffold", "version")
 		cmdOut, err = command.Output()
 		if err != nil {
-			// kind is not present in the system
-			fmt.Println(string(colors.RED), "skaffold is not present on the machine, terminating...")
+			// skaffold is not present in the system
+			log.Error(string(colors.RED), "skaffold is not present on the machine, terminating...")
 			os.Exit(126)
 		} else {
-			fmt.Println(string(colors.WHITE), "skaffold "+strings.TrimSpace(string(cmdOut)), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "skaffold "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		}
 		// check if kubectl is present on the system
 		command = exec.Command("kubectl", "version", "--client=true", "--short=true")
 		cmdOut, err = command.Output()
 		if err != nil {
-			// kind is not present in the system
-			fmt.Println(string(colors.RED), "kubectl is not present on the machine, terminating...")
+			// kubectl is not present in the system
+			log.Error(string(colors.RED), "kubectl is not present on the machine, terminating...")
 			os.Exit(126)
 		} else {
-			fmt.Println(string(colors.WHITE), "kubectl "+strings.TrimSpace(strings.ToLower(string(cmdOut))), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "kubectl "+strings.TrimSpace(strings.ToLower(string(cmdOut))), util.Okay())
 		}
 		// check if istioctl is present on the system
 		command = exec.Command("istioctl", "version", "-s", "--remote=false")
 		cmdOut, err = command.Output()
 		if err != nil {
-			// kind is not present in the system
-			fmt.Println(string(colors.RED), "istioctl is not present on the machine, terminating...")
+			// istio is not present in the system
+			log.Error(string(colors.RED), "istioctl is not present on the machine, terminating...")
 			os.Exit(126)
 		}
 		version = strings.Split(strings.TrimSpace(string(cmdOut)), ".")
 		minorVer, err := strconv.Atoi(version[1])
 		if err != nil {
-			fmt.Println(string(colors.RED), "unable to parse istio version, terminating...")
+			log.Error(string(colors.RED), "unable to parse istio version, terminating...")
 			os.Exit(126)
 		}
 		if minorVer >= 5 {
-			fmt.Println(string(colors.WHITE), "istio "+strings.TrimSpace(string(cmdOut)), string(colors.GREEN), "✓")
+			log.Info(string(colors.WHITE), "istio "+strings.TrimSpace(string(cmdOut)), util.Okay())
 		} else {
-			fmt.Println(string(colors.RED), "istio 1.5 or greater needed, please update the version of istio on your machine.")
+			log.Error(string(colors.RED), "istio 1.5 or greater needed, please update the version of istio on your machine.")
 			os.Exit(1)
 		}
 	},
