@@ -2,10 +2,9 @@ package setup
 
 import (
 	"fmt"
-	"github.com/keitaroinc/enabler/cmd/colors"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,10 +15,11 @@ var initCmd = &cobra.Command{
 	Short: "Initialize infrastructure services",
 	Long:  `You can use the init command to download and install all serv ices such as: kind, kubectl, istioctl, helm and skaffold`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		// create dirs
 		path, err := os.Getwd()
 		if err != nil {
-			log.Println("error msg", err)
+			log.Error(err)
 		}
 		binPath := filepath.Join(path, "bin")
 		if _, err := os.Stat(binPath); os.IsNotExist(err) {
@@ -75,7 +75,7 @@ var initCmd = &cobra.Command{
 			// do something
 		}
 
-		fmt.Println(fmt.Sprintf("%sIMPORTANT:%s Please add the path to your user profile to %s directory at the begining of your path", string(colors.YELLOW), string(colors.WHITE), binPath))
-		fmt.Println(fmt.Sprintf("$ echo export PATH=%s:$PATH >> ~/.profile", binPath))
+		log.Infof("IMPORTANT: Please add the path to your user profile to %s directory at the beginning of your path", binPath)
+		log.Infof("$ echo export PATH=%s:$PATH >> ~/.profile", binPath)
 	},
 }

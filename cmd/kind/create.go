@@ -1,7 +1,7 @@
 package kind
 
 import (
-	"fmt"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -14,14 +14,15 @@ var createCmd = &cobra.Command{
 	Short: "Create a kind cluster",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		if config != ""{
 			// check if the kind cluster already exists
 			kubeContext := cmd.Flag("kube-context").Value
 			err := getKind(kubeContext.String())
 			if err != nil {
-				fmt.Println(fmt.Sprintf("Kind cluster %s doesn't exist, continue with creation.", kubeContext))
+				log.Infof("Kind cluster %s doesn't exist, continue with creation.", kubeContext)
 			} else {
-				fmt.Println(fmt.Sprintf("Kind cluster %s already exists, skipping creation.", kubeContext))
+				log.Infof("Kind cluster %s already exists, skipping creation.", kubeContext)
 				os.Exit(0)
 			}
 
@@ -33,12 +34,12 @@ var createCmd = &cobra.Command{
 			_, err = command.Output()
 			if err != nil {
 				// unable to create the cluster
-				fmt.Println(fmt.Sprintf("Unable to create the cluster: %s", kubeContext))
+				log.Errorf("Unable to create the cluster: %s", kubeContext)
 				if err, ok := err.(*exec.ExitError); ok {
 					os.Exit(err.ExitCode())
 				}
 			}
-			fmt.Println(fmt.Sprintf("Kind cluster %s created.", kubeContext))
+			log.Infof("Kind cluster %s created.", kubeContext)
 		} else {
 			cmd.Help()
 		}

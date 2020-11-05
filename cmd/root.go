@@ -21,6 +21,7 @@ import (
 	"github.com/keitaroinc/enabler/cmd/kind"
 	"github.com/keitaroinc/enabler/cmd/platform"
 	"github.com/keitaroinc/enabler/cmd/preflight"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 
@@ -81,6 +82,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	log := util.NewLogger("INFO", nil)
 	// Set default versions for all required dependencies
 	viper.SetDefault("kubectl", map[string]string{"version": "1.17.3"})
 	viper.SetDefault("helm", map[string]string{"version": "3.1.2"})
@@ -95,7 +97,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
 			os.Exit(1)
 		}
 
@@ -109,7 +111,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Infof("Using config file: %s", viper.ConfigFileUsed())
 	}
 
 	// Check if something is missing

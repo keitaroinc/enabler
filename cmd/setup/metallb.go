@@ -7,9 +7,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/keitaroinc/enabler/cmd/colors"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -21,7 +20,7 @@ var metallbCmd = &cobra.Command{
 	Short: "Configure metallb",
 	Long:  `Verify system installation of metallb and check if we are ready to setup metallb`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		log := util.NewLogger("INFO", nil)
 		kubeContext := cmd.Flag("kube-context").Value
 		// check if metallb is present on the system
 		command := exec.Command("helm", "status", "metallb",
@@ -31,10 +30,9 @@ var metallbCmd = &cobra.Command{
 		_, err := command.Output()
 		if err != nil {
 			// metallb is not present in the system
-			fmt.Println(string(colors.RED), "Metallb not found...installing.")
-			os.Exit(126)
+			log.Fatal("Metallb not found...installing.")
 		}
-		fmt.Println("Installing metallb, please wait...")
+		log.Infof("Installing metallb, please wait...")
 
 		// get docker client
 		cli, err := client.NewEnvClient()
@@ -53,7 +51,7 @@ var metallbCmd = &cobra.Command{
 		}
 
 		bridgeSubnet := dockerBridge[0].IPAM.Config[0].Subnet
-		fmt.Println("Using docker bridge subnet: ", bridgeSubnet)
+		log.Infof("Using docker bridge subnet: %s", bridgeSubnet)
 		_, networkIPs, err := net.ParseCIDR(bridgeSubnet)
 		if err != nil {
 			log.Fatal(err)
@@ -93,11 +91,11 @@ var metallbCmd = &cobra.Command{
 				"--context", fmt.Sprintf("kind-%s", kubeContext),
 			)
 			if err, ok := err.(*exec.ExitError); ok {
-				fmt.Println("Could not create namespace for metallb, terminating.")
+				log.Fatal("Could not create namespace for metallb, terminating.")
 				os.Exit(err.ExitCode())
 			}
 		} else {
-			fmt.Println("metallb namespace already exists, skipping creation.", cmdOut)
+			log.Infof("metallb namespace %s already exists, skipping creation.", cmdOut)
 		}
 
 		// install metallb on the cluster
@@ -109,13 +107,10 @@ var metallbCmd = &cobra.Command{
 		)
 		_, err = command.Output()
 		if err != nil {
-			fmt.Println(string(colors.RED), "Could not install metallb, terminating.")
-			if err, ok := err.(*exec.ExitError); ok {
-				os.Exit(err.ExitCode())
-			}
-			os.Exit(126)
+			log.Error(err)
+			log.Fatal("Could not install metallb, terminating.")
 		} else {
-			fmt.Println("Metallb installed on the cluster.")
+			log.Info("Metallb installed on the cluster.")
 		}
 	},
 }

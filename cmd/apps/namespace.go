@@ -2,6 +2,7 @@ package apps
 
 import (
 	"fmt"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -14,6 +15,7 @@ var namespaceCmd = &cobra.Command{
 	Short: "Create namespace",
 	Long:  `Create a namespace with auto-injection`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		kubeContext := cmd.Flag("kube-context").Value
 		if nsName != "" {
 			// check if the namespace exists
@@ -29,12 +31,12 @@ var namespaceCmd = &cobra.Command{
 				_, err := command.Output()
 				if err != nil {
 					// unable to create the namespace, exit with original exit code
-					fmt.Println(fmt.Sprintf("Unable to create namespace: %s", nsName))
+					log.Errorf("Unable to create namespace: %s", nsName)
 					if err, ok := err.(*exec.ExitError); ok {
 						os.Exit(err.ExitCode())
 					}
 				}
-				fmt.Println(fmt.Sprintf("Created a namespace for: %s", nsName))
+				log.Infof("Created a namespace for: %s", nsName)
 				// label the created namespace
 				command = exec.Command("kubectl", "label", "namespace", nsName,
 					"istio-injection=enabled",
@@ -43,14 +45,14 @@ var namespaceCmd = &cobra.Command{
 				_, err = command.Output()
 				if err != nil {
 					// unable to label the namespace, exit with original exit code
-					fmt.Println(fmt.Sprintf("Unable to label the namespace: %s", nsName))
+					log.Infof("Unable to label the namespace: %s", nsName)
 					if err, ok := err.(*exec.ExitError); ok {
 						os.Exit(err.ExitCode())
 					}
 				}
-				fmt.Println(fmt.Sprintf("Labeled %s namespace for istio injection.", nsName))
+				log.Infof("Labeled %s namespace for istio injection.", nsName)
 			} else {
-				fmt.Println(fmt.Sprintf("Skipped creation of %s since it already exists.", nsName))
+				log.Infof("Skipped creation of %s since it already exists.", nsName)
 			}
 		} else {
 			cmd.Help()

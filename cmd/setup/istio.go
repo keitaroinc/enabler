@@ -2,9 +2,8 @@ package setup
 
 import (
 	"fmt"
-	"github.com/keitaroinc/enabler/cmd/colors"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
-	"os"
 	"os/exec"
 )
 
@@ -13,17 +12,16 @@ var istioCmd = &cobra.Command{
 	Short: "Configure istio",
 	Long:  `Verify system installation of istio and check if we are ready to setup istio`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		log := util.NewLogger("INFO", nil)
 		kubeContext := cmd.Flag("kube-context").Value
 		// check if istio is present on the system
 		command := exec.Command("istioctl", "verify-install", "--context", fmt.Sprintf("kind-%s", kubeContext))
 		_, err := command.Output()
 		if err != nil {
 			// istio verification failed, exit
-			fmt.Println(string(colors.RED), "Istio pre-check failed...aborting install.")
-			os.Exit(126)
+			log.Fatal("Istio pre-check failed...aborting install.")
 		}
-		fmt.Println("Installing istio, please wait...")
+		log.Infof("Installing istio, please wait...")
 
 		// TODO: configure istio through config?
 		command = exec.Command("istioctl", "manifest", "apply", "-y",
@@ -39,10 +37,9 @@ var istioCmd = &cobra.Command{
 		_, err = command.Output()
 		if err != nil {
 			// istio installation failed, exit
-			fmt.Println(string(colors.RED), "Istio installation failed.")
-			os.Exit(126)
+			log.Fatal("Istio installation failed.")
 		} else {
-			fmt.Println("Istio installed.")
+			log.Infof("Istio installed.")
 		}
 	},
 }

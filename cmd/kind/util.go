@@ -10,13 +10,14 @@ import (
 )
 
 func getKind(cluster string) error {
+	log := util.NewLogger("INFO", nil)
 	command := exec.Command("kind", "get", "clusters")
 	cmdOut, err := command.Output()
 	if err != nil {
 		// unable to get kind clusters
-		fmt.Println(fmt.Sprintf("Unable to get kind cluster: %s", cluster))
+		log.Errorf("Unable to get kind cluster: %s", cluster)
 		if err, ok := err.(*exec.ExitError); ok {
-			fmt.Println(err.ExitCode())
+			log.Error(err.ExitCode())
 			return err
 		}
 	}
@@ -38,12 +39,13 @@ func getClusterInfo(cluster string) error {
 }
 
 func setKubeConfig(container types.Container, cluster string) error {
+	log := util.NewLogger("INFO", nil)
 	command := exec.Command("kubectl", "config", "set-cluster", fmt.Sprintf("kind-%s", cluster),
 		"--server", fmt.Sprintf("https://127.0.0.1:%d", container.Ports[0].PublicPort))
 	_, err := command.Output()
 	if err != nil {
 		// unable to set kube config
-		fmt.Println(fmt.Sprintf("Unable to set kube config: %s", cluster))
+		log.Errorf("Unable to set kube config: %s", cluster)
 		return err
 	}
 	return nil

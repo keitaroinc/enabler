@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -18,13 +19,14 @@ var stopCmd = &cobra.Command{
 	Short: "Stop kind cluster",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		// Kind creates containers with a label io.x-k8s.kind.cluster
 		// Kind naming is clustername-control-plane and clustername-worker{x}
 		// The idea is to find the containers and stop them
 		kubeContext := cmd.Flag("kube-context").Value
 		err := getKind(kubeContext.String())
 		if err != nil {
-			fmt.Println(fmt.Sprintf("Kind cluster %s doesn't exist, terminating.", kubeContext))
+			log.Errorf("Kind cluster %s doesn't exist, terminating.", kubeContext)
 			if err, ok := err.(*exec.ExitError); ok {
 				os.Exit(err.ExitCode())
 			}
@@ -57,18 +59,18 @@ var stopCmd = &cobra.Command{
 				case "running":
 					err := cli.ContainerStop(context.Background(), container.ID, &stopDuration)
 					if err != nil {
-						fmt.Println(fmt.Sprintf("Unable to stop container: %s", container.Names[0]))
+						log.Errorf("Unable to stop container: %s", container.Names[0])
 					} else {
-						fmt.Println(fmt.Sprintf("Container %s stopped.", container.Names[0]))
+						log.Infof("Container %s stopped.", container.Names[0])
 					}
 				default:
-					fmt.Println(fmt.Sprintf("Cannot stop container %s because it is in %s status.", container.Names[0], container.State))
+					log.Infof("Cannot stop container %s because it is in %s status.", container.Names[0], container.State)
 				}
 			}
 			// sleep 1 sec before stopping the spinner
 			time.Sleep(1 * time.Second)
 			s.Stop()
-			fmt.Println(fmt.Sprintf("Kind cluster \"%s\" was stopped.", kubeContext))
+			log.Infof("Kind cluster \"%s\" was stopped.", kubeContext)
 		}
 	},
 }

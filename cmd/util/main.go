@@ -28,7 +28,7 @@ func NewLogger(level string, formatter logrus.Formatter) *logrus.Logger {
 		log.Error(errors.Wrapf(err, "Unable to parse log level (level=%s), setting default", level))
 		log.SetLevel(logrus.InfoLevel)
 	} else {
-		log.Infof("Setting log level (level=%s)", lvl)
+		log.Debugf("Setting log level (level=%s)", lvl)
 		log.SetLevel(lvl)
 	}
 	return log

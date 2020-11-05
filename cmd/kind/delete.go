@@ -1,7 +1,7 @@
 package kind
 
 import (
-	"fmt"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -12,11 +12,12 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete kind cluster",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := util.NewLogger("INFO", nil)
 		// check if the kind cluster exists
 		kubeContext := cmd.Flag("kube-context").Value
 		err := getKind(kubeContext.String())
 		if err != nil {
-			fmt.Println(fmt.Sprintf("Kind cluster %s doesn't exist, terminating.", kubeContext))
+			log.Errorf("Kind cluster %s doesn't exist, terminating.", kubeContext)
 			if err, ok := err.(*exec.ExitError); ok {
 				os.Exit(err.ExitCode())
 			}
@@ -26,11 +27,11 @@ var deleteCmd = &cobra.Command{
 		_, err = command.Output()
 		if err != nil {
 			// unable to delete the cluster
-			fmt.Println(fmt.Sprintf("Unable to delete kind cluster: %s", kubeContext))
+			log.Errorf("Unable to delete kind cluster: %s", kubeContext)
 			if err, ok := err.(*exec.ExitError); ok {
 				os.Exit(err.ExitCode())
 			}
 		}
-		fmt.Println(fmt.Sprintf("Kind cluster %s deleted.", kubeContext))
+		log.Infof("Kind cluster %s deleted.", kubeContext)
 	},
 }

@@ -17,10 +17,9 @@ package setup
 
 import (
 	"fmt"
-	"github.com/keitaroinc/enabler/cmd/colors"
+	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"io"
-	"log"
 	"net/http"
 	"os"
 )
@@ -58,25 +57,26 @@ func init() {
 }
 
 func InstallDependency(name string, url string, dest string) error {
-
+	log := util.NewLogger("INFO", nil)
 	err := Download(dest, url)
 	if err != nil {
 		fmt.Println("SOME ERROR")
 		return err
 	} else {
-		fmt.Println(fmt.Sprintf("%s%s download complete.", string(colors.WHITE), name))
+		log.Infof("%s download complete.", name)
 	}
 	err = os.Chmod(dest, 0755)
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
-	fmt.Println(fmt.Sprintf("%s%s installed successfully.", string(colors.GREEN), name))
+	log.Infof("%s installed successfully.", name)
 	return nil
 }
 
 func Download(path string, url string) error {
-	fmt.Println(fmt.Sprintf("%sDownloading %s ...", string(colors.WHITE), url))
+	log := util.NewLogger("INFO", nil)
+	log.Infof("Downloading %s ...", url)
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
