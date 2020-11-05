@@ -1,8 +1,6 @@
 package util
 
 import (
-	"fmt"
-	"github.com/keitaroinc/enabler/cmd/colors"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -14,10 +12,6 @@ func InSlice(slice []string, val string) (int, bool) {
 		}
 	}
 	return -1, false
-}
-
-func Okay() string {
-	return fmt.Sprintf("%s ✓", string(colors.GREEN))
 }
 
 func NewLogger(level string, formatter logrus.Formatter) *logrus.Logger {
