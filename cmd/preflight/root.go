@@ -16,7 +16,6 @@ limitations under the License.
 package preflight
 
 import (
-	"github.com/keitaroinc/enabler/cmd/colors"
 	"github.com/keitaroinc/enabler/cmd/util"
 	"github.com/spf13/cobra"
 	"os"
@@ -70,7 +69,7 @@ to quickly create a Cobra application.`,
 		cmdOut, err = command.Output()
 		if err != nil {
 			// helm is not present in the system
-			log.Fatal(string(colors.RED), "helm is not present on the machine, terminating...")
+			log.Fatal("helm is not present on the machine, terminating...")
 		}
 		if strings.HasPrefix(strings.TrimSpace(string(cmdOut)), "v3") {
 			log.Infof("helm %s ✓", strings.TrimSpace(string(cmdOut)))
