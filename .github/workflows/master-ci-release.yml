@@ -35,6 +35,8 @@ jobs:
 
       - name: Delete old release
         uses: jagger27/delete-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ci-build
 
