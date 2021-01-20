@@ -57,5 +57,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: https://github.com/keitaroinc/enabler/releases/tag/ci-build
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           assets_path: ./build
