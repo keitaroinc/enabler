@@ -39,7 +39,7 @@ jobs:
         run: |
           curl -X DELETE \
             -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: ${{GITHUB_TOKEN}}" \
+            -H "Authorization: ${{secrets.GITHUB_TOKEN}}" \
             https://api.github.com/repos/keitaroinc/enabler/releases/ci-build
 
       - name: Create release
