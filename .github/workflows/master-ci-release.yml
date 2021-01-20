@@ -32,9 +32,9 @@ jobs:
           ldflags: -s -w
 
       - name: Delete old release
-        uses: jagger27/delete-release@v1
+        uses: larryjoelane/delete-release-action@v1.0.24
         with:
-          tag_name: ci-build
+          release-name: ci-build
 
       - name: Create release
         uses: actions/create-release@v1.0.0
