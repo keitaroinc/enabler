@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - master
-
 jobs:
   release:
     strategy:
@@ -35,12 +34,9 @@ jobs:
           ldflags: -s -w
 
       - name: Delete old release
-        id: delete_release
-        run: |
-          curl -X DELETE \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: Bearer ${{secrets.GITHUB_TOKEN}}" \
-            https://api.github.com/repos/keitaroinc/enabler/releases/ci-build
+        uses: jagger27/delete-release@master
+        with:
+          tag_name: ci-build
 
       - name: Create release
         uses: actions/create-release@v1.0.0
