@@ -54,6 +54,8 @@ jobs:
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: https://github.com/keitaroinc/enabler/releases/tag/ci-build
           assets_path: ./build

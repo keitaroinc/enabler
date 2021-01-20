@@ -35,6 +35,8 @@ jobs:
       - name: Create release
         uses: actions/create-release@v1.0.0
         id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # TODO: create custom body that contains changelog with commits
           tag_name: ${{ github.ref }}
@@ -44,6 +46,8 @@ jobs:
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           assets_path: ./build
