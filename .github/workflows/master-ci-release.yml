@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   release:
@@ -32,9 +35,12 @@ jobs:
           ldflags: -s -w
 
       - name: Delete old release
-        uses: larryjoelane/delete-release-action@v1.0.24
-        with:
-          release-name: ci-build
+        id: delete_release
+        run: |
+          curl -X DELETE \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: ${{GITHUB_TOKEN}}" \
+            https://api.github.com/repos/keitaroinc/enabler/releases/ci-build
 
       - name: Create release
         uses: actions/create-release@v1.0.0
