@@ -48,7 +48,7 @@ jobs:
         with:
           # TODO: create custom body that contains changelog with commits
           tag_name: ci-build
-          release_name: Enabler CI Release
+          release_name: CI Release
           draft: false
           prerelease: true
 
