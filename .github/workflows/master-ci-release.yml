@@ -34,7 +34,7 @@ jobs:
           onlyLastTag: true
           simpleList: true
           compareLink: true
-          excludeTagsRegex: "v*"
+          excludeTagsRegex: "v.*"
           verbose: true
 
       - name: Set up Go ${{ matrix.go_version }}
