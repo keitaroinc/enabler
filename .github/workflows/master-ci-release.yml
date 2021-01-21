@@ -27,11 +27,11 @@ jobs:
           addSections: '{"documentation":{"prefix":"### Documentation","labels":["documentation"]},"tests":{"prefix":"### Testing","labels":["tests"]}}'
           issues: true
           issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          author: true
+          pullRequests: "true"
+          prWoLabels: "true"
+          author: "true"
           stripGeneratorNotice: "true"
-          onlyLastTag: true
+          onlyLastTag: "true"
           verbose: true
 
       - name: Set up Go ${{ matrix.go_version }}
