@@ -62,7 +62,7 @@ jobs:
           release_name: CI Release
           draft: false
           prerelease: true
-          body: ${{ steps.generate_changelog.outputs.changelog }}
+          body_path: ./CHANGELOG.md
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
