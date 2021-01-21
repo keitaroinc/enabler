@@ -31,6 +31,7 @@ jobs:
           stripGeneratorNotice: true
           verbose: true
           onlyLastTag: true
+          compareLink: true
 
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
