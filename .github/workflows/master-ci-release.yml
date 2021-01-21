@@ -19,6 +19,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Generage changelog
+        id: generate_changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          headerLabel: "# 📑 Changelog"
+          breakingLabel: '### 💥 Breaking'
+          enhancementLabel: '### 🚀 Enhancements'
+          bugsLabel: '### 🐛 Bug fixes'
+          deprecatedLabel: '### ⚠️ Deprecations'
+          removedLabel: '### 🔥 Removals'
+          securityLabel: '### 🛡️ Security'
+          issuesLabel: '### 📁 Other issues'
+          prLabel: '### 📁 Other pull requests'
+          addSections: '{"documentation":{"prefix":"### 📖 Documentation","labels":["documentation"]},"tests":{"prefix":"### ✅ Testing","labels":["tests"]}}'
+          issues: true
+          issuesWoLabels: true
+          pullRequests: true
+          prWoLabels: true
+          author: true
+          unreleased: true
+          compareLink: true
+          stripGeneratorNotice: true
+          verbose: true
+
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
         with:
@@ -43,38 +68,12 @@ jobs:
         with:
           tag_name: ci-build
 
-      - name: Generage changelog
-        id: generate_changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          headerLabel: "# 📑 Changelog"
-          breakingLabel: '### 💥 Breaking'
-          enhancementLabel: '### 🚀 Enhancements'
-          bugsLabel: '### 🐛 Bug fixes'
-          deprecatedLabel: '### ⚠️ Deprecations'
-          removedLabel: '### 🔥 Removals'
-          securityLabel: '### 🛡️ Security'
-          issuesLabel: '### 📁 Other issues'
-          prLabel: '### 📁 Other pull requests'
-          addSections: '{"documentation":{"prefix":"### 📖 Documentation","labels":["documentation"]},"tests":{"prefix":"### ✅ Testing","labels":["tests"]}}'
-          issues: true
-          issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          author: true
-          unreleased: true
-          compareLink: true
-          stripGeneratorNotice: true
-          verbose: true
-
       - name: Create release
         uses: actions/create-release@v1.0.0
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # TODO: create custom body that contains changelog with commits
           tag_name: ci-build
           release_name: CI Release
           draft: false
