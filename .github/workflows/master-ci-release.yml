@@ -24,15 +24,9 @@ jobs:
         uses: heinrichreimer/github-changelog-generator-action@v2.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          addSections: '{"documentation":{"prefix":"### Documentation","labels":["documentation"]},"tests":{"prefix":"### Testing","labels":["tests"]}}'
-          issues: true
-          issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          author: true
-          stripGeneratorNotice: true
-          verbose: true
-          onlyLastTag: true
+          onlyLastTag: "true"
+          stripHeaders: "true"
+          stripGeneratorNotice: "true"
 
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
@@ -69,7 +63,6 @@ jobs:
           draft: false
           prerelease: true
           body: ${{ steps.generate_changelog.outputs.changelog }}
-          body_path: ./CHANGELOG.md
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
