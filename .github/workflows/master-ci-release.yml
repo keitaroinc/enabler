@@ -31,8 +31,7 @@ jobs:
           prWoLabels: true
           author: true
           stripGeneratorNotice: "true"
-          onlyLastTag: true
-          simpleList: true
+          onlyLastTag: false
           compareLink: true
           excludeTagsRegex: "v.*"
           verbose: true
