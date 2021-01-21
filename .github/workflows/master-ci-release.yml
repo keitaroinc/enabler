@@ -30,9 +30,8 @@ jobs:
           pullRequests: true
           prWoLabels: true
           author: true
-          unreleased: true
-          compareLink: true
           stripGeneratorNotice: "true"
+          onlyLastTag: true
           verbose: true
 
       - name: Set up Go ${{ matrix.go_version }}
