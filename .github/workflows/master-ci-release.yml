@@ -31,7 +31,6 @@ jobs:
           prWoLabels: true
           author: true
           stripGeneratorNotice: true
-          onlyLastTag: true
           simpleList: true
           verbose: true
 
