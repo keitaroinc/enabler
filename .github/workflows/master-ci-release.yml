@@ -25,14 +25,14 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           addSections: '{"documentation":{"prefix":"### Documentation","labels":["documentation"]},"tests":{"prefix":"### Testing","labels":["tests"]}}'
-          issues: "true"
-          issuesWoLabels: "true"
+          issues: true
+          issuesWoLabels: true
           pullRequests: true
           prWoLabels: true
-          author: "true"
-          stripGeneratorNotice: "true"
+          author: true
+          stripGeneratorNotice: true
           onlyLastTag: true
-          simpleList: "true"
+          simpleList: true
           verbose: true
 
       - name: Set up Go ${{ matrix.go_version }}
