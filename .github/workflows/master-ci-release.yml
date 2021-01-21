@@ -40,6 +40,12 @@ jobs:
         with:
           tag_name: ci-build
 
+      - name: Generage changelog
+        id: generate_changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create release
         uses: actions/create-release@v1.0.0
         id: create_release
@@ -51,6 +57,7 @@ jobs:
           release_name: CI Release
           draft: false
           prerelease: true
+          body: ${{ steps.generate_changelog.outputs.changelog }}
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
