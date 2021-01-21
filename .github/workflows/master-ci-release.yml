@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
+        with:
+          fetch-depth: 0
+
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
         with:
@@ -45,6 +48,25 @@ jobs:
         uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          headerLabel: "# 📑 Changelog"
+          breakingLabel: '### 💥 Breaking'
+          enhancementLabel: '### 🚀 Enhancements'
+          bugsLabel: '### 🐛 Bug fixes'
+          deprecatedLabel: '### ⚠️ Deprecations'
+          removedLabel: '### 🔥 Removals'
+          securityLabel: '### 🛡️ Security'
+          issuesLabel: '### 📁 Other issues'
+          prLabel: '### 📁 Other pull requests'
+          addSections: '{"documentation":{"prefix":"### 📖 Documentation","labels":["documentation"]},"tests":{"prefix":"### ✅ Testing","labels":["tests"]}}'
+          issues: true
+          issuesWoLabels: true
+          pullRequests: true
+          prWoLabels: true
+          author: true
+          unreleased: true
+          compareLink: true
+          stripGeneratorNotice: true
+          verbose: true
 
       - name: Create release
         uses: actions/create-release@v1.0.0
@@ -57,8 +79,7 @@ jobs:
           release_name: CI Release
           draft: false
           prerelease: true
-          body: |
-          ${{ steps.generate_changelog.outputs.changelog }}
+          body: ${{ steps.generate_changelog.outputs.changelog }}
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
