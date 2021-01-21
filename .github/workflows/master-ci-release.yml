@@ -24,25 +24,15 @@ jobs:
         uses: heinrichreimer/github-changelog-generator-action@v2.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          headerLabel: "# 📑 Changelog"
-          breakingLabel: '### 💥 Breaking'
-          enhancementLabel: '### 🚀 Enhancements'
-          bugsLabel: '### 🐛 Bug fixes'
-          deprecatedLabel: '### ⚠️ Deprecations'
-          removedLabel: '### 🔥 Removals'
-          securityLabel: '### 🛡️ Security'
-          issuesLabel: '### 📁 Other issues'
-          prLabel: '### 📁 Other pull requests'
-          addSections: '{"documentation":{"prefix":"### 📖 Documentation","labels":["documentation"]},"tests":{"prefix":"### ✅ Testing","labels":["tests"]}}'
+          addSections: '{"documentation":{"prefix":"### Documentation","labels":["documentation"]},"tests":{"prefix":"### Testing","labels":["tests"]}}'
           issues: true
           issuesWoLabels: true
           pullRequests: true
           prWoLabels: true
           author: true
-          unreleased: true
-          compareLink: true
           stripGeneratorNotice: true
           verbose: true
+          onlyLastTag: true
 
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
