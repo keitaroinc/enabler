@@ -27,6 +27,11 @@ jobs:
           onlyLastTag: "true"
           stripHeaders: "true"
           stripGeneratorNotice: "true"
+          issues: "true"
+          issuesWoLabels: "true"
+          pullRequests: "true"
+          prWoLabels: "true"
+          author: "true"
 
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v1
@@ -62,7 +67,7 @@ jobs:
           release_name: CI Release
           draft: false
           prerelease: true
-          body_path: ./CHANGELOG.md
+          body: ${{ steps.generate_changelog.outputs.changelog }}
 
       - name: Push release binaries
         uses: glentiki/xbin-release-action@v1.0.0
