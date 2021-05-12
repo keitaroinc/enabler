@@ -51,7 +51,7 @@ jobs:
           ldflags: -s -w
 
       - name: Create release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.4
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
