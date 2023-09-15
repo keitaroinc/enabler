@@ -161,8 +161,11 @@ def version(ctx, kube_context, submodules, repopath):
     or you can use 'all' for all submodules"""
 
     # Get the repo from arguments defaults to cwd
-    repo = get_repo(repopath)
-    submodules = get_submodules(repo, submodules)
+    try:
+        repo = get_repo(repopath)
+        submodules = get_submodules(repo, submodules)
+    except Exception as e:
+        logger.error(f'An error occurred while getting {submodule}: {e}')
 
     # Do something with the submodules
     all_sm_details = []
@@ -201,7 +204,8 @@ def version(ctx, kube_context, submodules, repopath):
 
             # Check if we point to any tags
             points_at_tag = smrepo.git.tag('--points-at', 'HEAD')
-            sm_details['tag'] = points_at_tag
+            tag_names = points_at_tag.split('\n') 
+            sm_details['tag'] = tag_names
 
             # Get sha of HEAD
             sha = smrepo.head.commit.hexsha
