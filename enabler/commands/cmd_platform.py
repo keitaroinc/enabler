@@ -223,10 +223,11 @@ def version(ctx, kube_context, submodules, repopath):
         logger.info(u'\u2023' + ' SHA: ' + sm_details['sha'])
         if sm_details['tag']:
             logger.info(u'\u2023' + ' Tag: ' + sm_details['tag'])
-        if sm_details['branch']:
+        if sm_details['commits_ahead']:
             if sm_details['commits_ahead'] > 0:
                 logger.info(u'\u2023' + ' Ahead by: ' +
                             str(sm_details['commits_ahead']) + ' commits')
-            if sm_details['commits_behind'] > 0:
-                logger.info(u'\u2023' + ' Behind by: ' +
-                            str(sm_details['commits_behind']) + ' commits')
+            if sm_details['commits_behind']:
+                if sm_details['commits_behind'] > 0:
+                    logger.info(u'\u2023' + ' Behind by: ' +
+                                str(sm_details['commits_behind']) + ' commits')
