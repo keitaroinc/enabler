@@ -157,15 +157,15 @@ def release(ctx, kube_context, version, submodules, repopath):
 @pass_environment
 def version(ctx, kube_context, submodules, repopath):
     """Check versions of microservices in git submodules
-    You can provide a comma separated list of submodules
-    or you can use 'all' for all submodules"""
+        You can provide a comma separated list of submodules
+        or you can use 'all' for all submodules"""
 
     # Get the repo from arguments defaults to cwd
     try:
         repo = get_repo(repopath)
         submodules = get_submodules(repo, submodules)
     except Exception as e:
-        logger.error(f'An error occurred while getting {submodule}: {e}')
+        logger.error(f'An error occurred while getting {submodule}: {e}'.format(submodule,e))
 
     # Do something with the submodules
     all_sm_details = []
@@ -204,8 +204,7 @@ def version(ctx, kube_context, submodules, repopath):
 
             # Check if we point to any tags
             points_at_tag = smrepo.git.tag('--points-at', 'HEAD')
-            tag_names = points_at_tag.split('\n') 
-            sm_details['tag'] = tag_names
+            sm_details['tag'] = points_at_tag
 
             # Get sha of HEAD
             sha = smrepo.head.commit.hexsha
@@ -214,20 +213,17 @@ def version(ctx, kube_context, submodules, repopath):
             # Add submodule details to the list
             all_sm_details.append(sm_details)
 
-    logger.debug('Received following details about the platform submodules:')
-    logger.debug(all_sm_details)
+
     for sm_details in all_sm_details:
         logger.info(sm_details['repo'] + ':')
-        if sm_details['branch']:
+        if 'branch' in sm_details:
             logger.info(u'\u2023' + ' Branch: ' + sm_details['branch'])
         logger.info(u'\u2023' + ' SHA: ' + sm_details['sha'])
-        if sm_details['tag']:
-            logger.info(u'\u2023' + ' Tag: ' + sm_details['tag'])
-        if sm_details['commits_ahead']:
-            if sm_details['commits_ahead'] > 0:
+        if 'tag' in sm_details:
+            logger.info(u'\u2023' + ' Tag: ' + str(sm_details['tag']))
+        if 'commits_ahead' in sm_details and sm_details['commits_ahead'] > 0:
                 logger.info(u'\u2023' + ' Ahead by: ' +
                             str(sm_details['commits_ahead']) + ' commits')
-        if sm_details['commits_behind']:
-            if sm_details['commits_behind'] > 0:
+        if 'commits_behind' in sm_details and sm_details['commits_behind'] > 0:
                 logger.info(u'\u2023' + ' Behind by: ' +
                             str(sm_details['commits_behind']) + ' commits')
