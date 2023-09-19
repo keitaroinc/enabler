@@ -113,17 +113,21 @@ def metallb(ctx, kube_context):
         pass
 
     # Get the Subnet of the docker bridge network
-    client = docker.from_env()
-    docker_bridge = client.networks.get('bridge')
-    bridge_subnet = docker_bridge.attrs['IPAM']['Config'][0]['Subnet']
-    logger.info('Using docker bridge subnet: ' + bridge_subnet)
+    try:
+        client = docker.from_env()
+        docker_bridge = client.networks.get('bridge')
+        bridge_subnet = docker_bridge.attrs['IPAM']['Config'][0]['Subnet']
+        logger.info('Using docker bridge subnet: ' + bridge_subnet)
 
-    # Extract the last 10 ip addresses of the docker bridge subnet
-    ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
-    metallb_ips = ips[-10:]
-    logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
-                metallb_ips[0] + ' - ' + metallb_ips[-1])
-
+        # Extract the last 10 ip addresses of the docker bridge subnet
+        ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
+        metallb_ips = ips[-10:]
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
+                    metallb_ips[0] + ' - ' + metallb_ips[-1])
+    except Exception as e:
+        logger.error("Docker not found. "+str(e))
+        raise click.Abort()
+    
     # Metallb layer2 configuration
     metallb_config = (
                    'configInline.address-pools[0].name=default,'
