@@ -227,7 +227,7 @@ def version(ctx, kube_context, submodules, repopath):
             if sm_details['commits_ahead'] > 0:
                 logger.info(u'\u2023' + ' Ahead by: ' +
                             str(sm_details['commits_ahead']) + ' commits')
-            if sm_details['commits_behind']:
-                if sm_details['commits_behind'] > 0:
-                    logger.info(u'\u2023' + ' Behind by: ' +
-                                str(sm_details['commits_behind']) + ' commits')
+        if sm_details['commits_behind']:
+            if sm_details['commits_behind'] > 0:
+                logger.info(u'\u2023' + ' Behind by: ' +
+                            str(sm_details['commits_behind']) + ' commits')
