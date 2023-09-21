@@ -43,10 +43,10 @@ def init(ctx, kube_context, submodules, repopath):
         for submodule in submodules:
             try:
                 smodule=repo.submodule(submodule)
-                smodule.update
-                logger.info('Fetching latest changes for {submodule}')
+                smodule.update()
+                logger.info('Fetching latest changes for {}'.format(submodule))
             except Exception as e:
-                logger.error(f'An error occurred while updating {submodule}: {e}')
+                logger.error('An error occurred while updating {submodule}: {e}'.format(submodule,e))
 
     logger.info('Platform initialized.')
 
