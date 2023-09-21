@@ -62,7 +62,6 @@ def info(ctx, kube_context):
                         '-o',
                         'jsonpath={.status.loadBalancer.ingress[0].ip}'],
                        capture_output=True, check=True)
-        print(gw_url)
         logger.info('Platform can be accessed through the URL:')
         logger.info(u'\u2023' + ' http://' + gw_url.stdout.decode('utf-8'))
         kube_info=s.run(['kubectl', 'cluster-info'],capture_output=True, check=True)
