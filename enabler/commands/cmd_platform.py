@@ -36,10 +36,18 @@ def init(ctx, kube_context, submodules, repopath):
 
     # Get the repo from arguments defaults to cwd
     repo = get_repo(repopath)
+
     submodules = get_submodules(repo, submodules)
 
     with click_spinner.spinner():
-        repo.submodule_update()
+        for submodule in submodules:
+            try:
+                smodule=repo.submodule(submodule)
+                smodule.update()
+                logger.info('Fetching latest changes for {}'.format(submodule))
+            except Exception as e:
+                logger.error('An error occurred while updating {submodule}: {e}'.format(submodule,e))
+
     logger.info('Platform initialized.')
 
 
@@ -64,8 +72,10 @@ def info(ctx, kube_context):
                        capture_output=True, check=True)
         logger.info('Platform can be accessed through the URL:')
         logger.info(u'\u2023' + ' http://' + gw_url.stdout.decode('utf-8'))
+        kube_info=s.run(['kubectl', 'cluster-info'],capture_output=True, check=True)
+        logger.info(kube_info.stdout.decode('utf-8'))
     except s.CalledProcessError as error:
-        logger.debug(error.stderr.decode('utf-8'))
+        logger.error(error.stderr.decode('utf-8'))
         raise click.Abort()
 
 
@@ -143,8 +153,7 @@ def release(ctx, kube_context, version, submodules, repopath):
 
     # TODO: Tag platform and all submodules at their respective SHAs
     pass
-
-# TODO: beautify output, check if remotes are ahead, warn anti-patern
+    # TODO: beautify output, check if remotes are ahead, warn anti-patern
 @cli.command('version', short_help='Get all versions of components')
 @click.argument('submodules',
                 required=True,
