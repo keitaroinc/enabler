@@ -112,22 +112,41 @@ def metallb(ctx, kube_context):
         logger.info('Metallb not found. Installing...')
         pass
 
-    # Get the Subnet of the docker bridge network
+    #Get repo version
     try:
-        client = docker.from_env()
-        docker_bridge = client.networks.get('bridge')
-        bridge_subnet = docker_bridge.attrs['IPAM']['Config'][0]['Subnet']
-        logger.info('Using docker bridge subnet: ' + bridge_subnet)
+        metallb_repo_add = s.run(['helm',
+                                'repo',
+                                'add',
+                                'metallb',
+                                'https://metallb.github.io/metallb'],
+                               capture_output=True, check=True)
+        logger.info('Downloading metallb version ...')
+        logger.debug(metallb_repo_add.stdout.decode('utf-8'))
+        metallb_repo_add = s.run(['helm',
+                                'repo',
+                                'update'],
+                               capture_output=True, check=True)
+        logger.info('Repo update ...')
+        logger.debug(metallb_repo_add.stdout.decode('utf-8'))
 
-        # Extract the last 10 ip addresses of the docker bridge subnet
-        ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
-        metallb_ips = ips[-10:]
-        logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
-                    metallb_ips[0] + ' - ' + metallb_ips[-1])
-    except Exception as e:
-        logger.error("Docker not found. "+str(e))
+    except s.CalledProcessError as error:
+        logger.info('Metallb repo not found.')
+        logger.error(error.stdout.decode('utf-8'))
         raise click.Abort()
-    
+
+
+    # Get the Subnet of the docker bridge network
+    client = docker.from_env()
+    docker_bridge = client.networks.get('bridge')
+    bridge_subnet = docker_bridge.attrs['IPAM']['Config'][0]['Subnet']
+    logger.info('Using docker bridge subnet: ' + bridge_subnet)
+
+    # Extract the last 10 ip addresses of the docker bridge subnet
+    ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
+    metallb_ips = ips[-10:]
+    logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
+                metallb_ips[0] + ' - ' + metallb_ips[-1])
+
     # Metallb layer2 configuration
     metallb_config = (
                    'configInline.address-pools[0].name=default,'
