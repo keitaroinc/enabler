@@ -36,10 +36,18 @@ def init(ctx, kube_context, submodules, repopath):
 
     # Get the repo from arguments defaults to cwd
     repo = get_repo(repopath)
+
     submodules = get_submodules(repo, submodules)
 
     with click_spinner.spinner():
-        repo.submodule_update()
+        for submodule in submodules:
+            try:
+                smodule=repo.submodule(submodule)
+                smodule.update()
+                logger.info('Fetching latest changes for {}'.format(submodule))
+            except Exception as e:
+                logger.error('An error occurred while updating {submodule}: {e}'.format(submodule,e))
+
     logger.info('Platform initialized.')
 
 
@@ -145,8 +153,7 @@ def release(ctx, kube_context, version, submodules, repopath):
 
     # TODO: Tag platform and all submodules at their respective SHAs
     pass
-
-# TODO: beautify output, check if remotes are ahead, warn anti-patern
+    # TODO: beautify output, check if remotes are ahead, warn anti-patern
 @cli.command('version', short_help='Get all versions of components')
 @click.argument('submodules',
                 required=True,
