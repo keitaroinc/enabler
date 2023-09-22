@@ -72,12 +72,10 @@ def info(ctx, kube_context):
                        capture_output=True, check=True)
         logger.info('Platform can be accessed through the URL:')
         logger.info(u'\u2023' + ' http://' + gw_url.stdout.decode('utf-8'))
-
         kube_info=s.run(['kubectl', 'cluster-info'],capture_output=True, check=True)
-        logger.info(kube_info)
-
+        logger.info(kube_info.stdout.decode('utf-8'))
     except s.CalledProcessError as error:
-        logger.debug(error.stderr.decode('utf-8'))
+        logger.error(error.stderr.decode('utf-8'))
         raise click.Abort()
 
 
