@@ -96,6 +96,7 @@ def metallb(ctx, kube_context):
     """Install and setup metallb on k8s"""
     # Check if metallb is installed
     kube_context = ctx.kube_context
+
     try:
         metallb_exists = s.run(['helm',
                                 'status',
@@ -149,9 +150,9 @@ def metallb(ctx, kube_context):
 
     # Metallb layer2 configuration
     metallb_config = (
-                   'config.address-pools[0].name=default,'
-                   'config.address-pools[0].protocol=layer2,'
-                   'config.address-pools[0].addresses[0]='
+                   'config.ipAddressPools[0].name=default,'
+                   'config.ipAddressPools[0].protocol=layer2,'
+                   'config.ipAddressPools[0].addresses[0]='
                    + metallb_ips[0] + '-' + metallb_ips[-1])
 
     # Create a namespace for metallb if it doesn't exist
@@ -187,17 +188,18 @@ def metallb(ctx, kube_context):
                               '--kube-context',
                               'kind-' + kube_context,
                               'metallb',
-                              '--set',
-                              metallb_config,
                               '-n',
                               'metallb',
-                              'stable/metallb'],
+                              '--set',
+                              metallb_config,
+                              'metallb/metallb'],
                              capture_output=True, check=True)
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
     except s.CalledProcessError as error:
         logger.error('Could not install metallb')
         logger.error(error.stderr.decode('utf-8'))
+
 
 
 # Istio setup
