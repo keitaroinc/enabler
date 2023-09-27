@@ -112,14 +112,14 @@ def metallb(ctx, kube_context):
     except s.CalledProcessError as error:
         logger.info('Metallb not found. Installing...')
         pass
-
+    
     #Get repo version
     try:
         metallb_repo_add = s.run(['helm',
                                 'repo',
                                 'add',
-                                'metallb',
-                                'https://metallb.github.io/metallb'],
+                                'bitnami',
+                                'https://charts.bitnami.com/bitnami'],
                                capture_output=True, check=True)
         logger.info('Downloading metallb version ...')
         logger.debug(metallb_repo_add.stdout.decode('utf-8'))
@@ -143,17 +143,17 @@ def metallb(ctx, kube_context):
     logger.info('Using docker bridge subnet: ' + bridge_subnet)
 
     # Extract the last 10 ip addresses of the docker bridge subnet
-    ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
+    ips = [str(ip) for ip in ipaddress.IPv4Network('172.18.0.0/16')]
     metallb_ips = ips[-10:]
     logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
                 metallb_ips[0] + ' - ' + metallb_ips[-1])
 
     # Metallb layer2 configuration
     metallb_config = (
-                   'config.ipAddressPools[0].name=default,'
-                   'config.ipAddressPools[0].protocol=layer2,'
-                   'config.ipAddressPools[0].addresses[0]='
-                   + metallb_ips[0] + '-' + metallb_ips[-1])
+                   'configInline.address-pools[0].name=vmt-ip-pool,'
+                   'configInline.address-pools[0].protocol=layer2,'
+                   'configInline.address-pools[0].addresses[0]='
+                    + metallb_ips[0] + '-' + metallb_ips[-1])
 
     # Create a namespace for metallb if it doesn't exist
     ns_exists = s.run(['kubectl',
@@ -180,7 +180,6 @@ def metallb(ctx, kube_context):
     else:
         logger.info('Skipping creation of metallb namespace '
                     'since it already exists.')
-
     # Install metallb on the cluster
     try:
         helm_metallb = s.run(['helm',
@@ -188,12 +187,15 @@ def metallb(ctx, kube_context):
                               '--kube-context',
                               'kind-' + kube_context,
                               'metallb',
-                              '-n',
-                              'metallb',
                               '--set',
                               metallb_config,
-                              'metallb/metallb'],
+                              '-n',
+                              'metallb',
+                              '--version',
+                              '3.0.7',
+                              'bitnami/metallb'],
                              capture_output=True, check=True)
+
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
     except s.CalledProcessError as error:
