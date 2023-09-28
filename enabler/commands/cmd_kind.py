@@ -53,8 +53,8 @@ def create(ctx, kube_context, configfile):
                                 click.format_filename(configfile)],
                                capture_output=False, check=True)
     except s.CalledProcessError as error:
-        logger.critical('Could not create kind cluster' +
-                        error.stderr.decode('utf-8'))
+        logger.critical('Could not create kind cluster: ' +
+                        str(error))
 
 
 @cli.command('delete', short_help='Delete cluster')
@@ -75,11 +75,10 @@ def delete(ctx, kube_context):
                                 'delete',
                                 'cluster',
                                 '--name',
-                                'vmt123'],
+                                kube_context],
                                capture_output=False, check=True)
     except s.CalledProcessError as error:
-        logger.critical('Could not delete kind cluster' +
-                        error.stderr.decode('utf-8'))
+        logger.critical('Could not delete kind cluster:' + str(error))
 
 
 @cli.command('status', short_help='Cluster status')
