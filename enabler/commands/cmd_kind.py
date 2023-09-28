@@ -27,7 +27,7 @@ def cli(ctx, kube_context):
 @pass_environment
 def create(ctx, kube_context, configfile):
     """Create a kind cluster"""
-    # Check if kind cluster is already created
+    
     kube_context = ctx.kube_context
     
     #Check if config file exists 
@@ -36,7 +36,7 @@ def create(ctx, kube_context, configfile):
         logger.error('Config file not found.')
         raise click.Abort()
         
-        
+    # Check if kind cluster is already created    
     if kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
