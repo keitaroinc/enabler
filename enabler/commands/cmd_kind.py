@@ -5,6 +5,7 @@ import click
 import click_spinner
 import subprocess as s
 import docker
+import os
 from time import sleep
 
 # Kind group of commands
@@ -28,6 +29,13 @@ def create(ctx, kube_context, configfile):
     """Create a kind cluster"""
     # Check if kind cluster is already created
     kube_context = ctx.kube_context
+    
+    #Check if config file exists 
+    if not os.path.exists(configfile) or configfile[-5:]!='.yaml':
+        logger.error('Config file not found.')
+        raise click.Abort()
+        
+        
     if kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
@@ -66,7 +74,7 @@ def delete(ctx, kube_context):
                                 'delete',
                                 'cluster',
                                 '--name',
-                                kube_context],
+                                'vmt123'],
                                capture_output=False, check=True)
     except s.CalledProcessError as error:
         logger.critical('Could not delete kind cluster' +
