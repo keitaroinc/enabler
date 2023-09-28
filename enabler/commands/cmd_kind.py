@@ -31,7 +31,8 @@ def create(ctx, kube_context, configfile):
     kube_context = ctx.kube_context
     
     #Check if config file exists 
-    if not os.path.exists(configfile) or configfile[-5:]!='.yaml':
+    base_name, extension = os.path.splitext(configfile)
+    if not os.path.exists(configfile) or extension!='.yaml':
         logger.error('Config file not found.')
         raise click.Abort()
         
