@@ -191,7 +191,7 @@ def metallb(ctx, kube_context):
                               '-n',
                               'metallb',
                               '--version',
-                              '3.0.7',
+                              '3.0.12',
                               'bitnami/metallb'],
                              capture_output=True, check=True)
 
