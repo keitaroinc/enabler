@@ -149,7 +149,7 @@ def metallb(ctx, kube_context):
 
     # Metallb layer2 configuration
     metallb_config = (
-                   'configInline.address-pools[0].name=vmt-ip-pool,'
+                   'configInline.address-pools[0].name=default,'
                    'configInline.address-pools[0].protocol=layer2,'
                    'configInline.address-pools[0].addresses[0]='
                     + metallb_ips[0] + '-' + metallb_ips[-1])
