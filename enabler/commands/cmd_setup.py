@@ -96,6 +96,7 @@ def metallb(ctx, kube_context):
     """Install and setup metallb on k8s"""
     # Check if metallb is installed
     kube_context = ctx.kube_context
+
     try:
         metallb_exists = s.run(['helm',
                                 'status',
@@ -111,15 +112,37 @@ def metallb(ctx, kube_context):
     except s.CalledProcessError as error:
         logger.info('Metallb not found. Installing...')
         pass
+    
+    #Get repo version
+    try:
+        metallb_repo_add = s.run(['helm',
+                                'repo',
+                                'add',
+                                'bitnami',
+                                'https://charts.bitnami.com/bitnami'],
+                               capture_output=True, check=True)
+        logger.info('Downloading metallb version ...')
+        logger.debug(metallb_repo_add.stdout.decode('utf-8'))
+        metallb_repo_add = s.run(['helm',
+                                'repo',
+                                'update'],
+                               capture_output=True, check=True)
+        logger.info('Repo update ...')
+        logger.debug(metallb_repo_add.stdout.decode('utf-8'))
 
-    # Get the Subnet of the docker bridge network
+    except s.CalledProcessError as error:
+        logger.info('Metallb repo not found.')
+        logger.error(error.stdout.decode('utf-8'))
+        raise click.Abort()
+
+    # Get the Subnet of the kind network
     client = docker.from_env()
-    docker_bridge = client.networks.get('bridge')
-    bridge_subnet = docker_bridge.attrs['IPAM']['Config'][0]['Subnet']
-    logger.info('Using docker bridge subnet: ' + bridge_subnet)
+    kind_network = client.networks.get('kind')
+    kind_subnet = kind_network.attrs['IPAM']['Config'][0]['Subnet']
+    logger.info('Using kind subnet: ' + kind_subnet)
 
     # Extract the last 10 ip addresses of the docker bridge subnet
-    ips = [str(ip) for ip in ipaddress.IPv4Network('172.17.0.0/16')]
+    ips = [str(ip) for ip in ipaddress.IPv4Network(kind_subnet)]
     metallb_ips = ips[-10:]
     logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
                 metallb_ips[0] + ' - ' + metallb_ips[-1])
@@ -129,7 +152,7 @@ def metallb(ctx, kube_context):
                    'configInline.address-pools[0].name=default,'
                    'configInline.address-pools[0].protocol=layer2,'
                    'configInline.address-pools[0].addresses[0]='
-                   + metallb_ips[0] + '-' + metallb_ips[-1])
+                    + metallb_ips[0] + '-' + metallb_ips[-1])
 
     # Create a namespace for metallb if it doesn't exist
     ns_exists = s.run(['kubectl',
@@ -156,7 +179,6 @@ def metallb(ctx, kube_context):
     else:
         logger.info('Skipping creation of metallb namespace '
                     'since it already exists.')
-
     # Install metallb on the cluster
     try:
         helm_metallb = s.run(['helm',
@@ -168,13 +190,17 @@ def metallb(ctx, kube_context):
                               metallb_config,
                               '-n',
                               'metallb',
-                              'stable/metallb'],
+                              '--version',
+                              '3.0.12',
+                              'bitnami/metallb'],
                              capture_output=True, check=True)
+
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
     except s.CalledProcessError as error:
         logger.error('Could not install metallb')
         logger.error(error.stderr.decode('utf-8'))
+
 
 
 # Istio setup
