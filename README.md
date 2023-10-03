@@ -14,7 +14,11 @@ The commands used are organized in 5 groups:
 **Apps group of commands**
 
 Application specific commands such as creation of kubernetes objects such as namespaces, configmaps etc. The name of the context is taken from the option --kube-context, which defaults to 'keitaro'. The commands in this group can be accessed using the prefix enabler apps + name_of_command.  The commands in this group are the following:
-- namespace: create a namespace using kubectl commands in the background. There is one argument for this command and it is name of namespace. The command can be run as: enabler apps namespace <name_of_namespace>
+- namespace: create a namespace using kubectl commands in the background. There is one argument for this command and it is name of namespace. The command can be run as: 
+
+```
+enabler apps namespace <name_of_namespace>
+```
 
 
 **Platform group of commands**
@@ -30,8 +34,9 @@ The commands in this group can be accessed using the prefix enabler platform + n
 **Preflight command**
 
 This command checks to ensure all dependencies such as java jdk 11, docker, helm, kind, skaffold, kubectl, istioctl etc. are present and with the necessary version. The command can be run with this line run while in the folder of the project:
-- enabler preflight
-  
+```
+enabler preflight
+```  
 
 **Kind group of commands**
 
