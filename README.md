@@ -1,12 +1,9 @@
 # enabler
 
-# enabler
-
-Enabler Overview
 
 Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom cmd commands to configure microservices.
-The repository for the project can be found on this link: https://github.com/keitaroinc/devops-enabler
-Enabler needs at least python3.7. Please check that you have python3.7 or later for running the commands defined in this application.
+The repository for the project can be found on this link: https://github.com/keitaroinc/devops-enabler. 
+Enabler needs at least python 3.7. Please check that you have python 3.7 or later for running the commands defined in this application.
 The commands used are organized in 5 groups:
 - apps
 - platform
