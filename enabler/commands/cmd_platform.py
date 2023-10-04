@@ -209,8 +209,8 @@ def version(ctx, kube_context, submodules, repopath):
                 sm_details['commits_behind'] = sum(1 for c in commits_behind)
             except TypeError as error:
                 if smrepo.head.is_detached:
-                    commit= str(error).split('\'')[1]
-                    sm_details['branch'] ='HEAD detached at '+commit
+                    commit=smrepo.head.commit.hexsha
+                    sm_details['branch'] ='HEAD detached at '+str(commit)
                 else:
                     logger.error(error)
 
