@@ -9,7 +9,7 @@ setup(
                       "click-log==0.3.2",
                       "click-spinner==0.1.8",
                       "docker==4.2.0",
-                      "gitpython==3.1.1",
+                      "gitpython==3.1.35",
                       "paramiko>=2.7.1",
                       "semver>=2.9.1",
                       "cryptography>=2.9.1"],
