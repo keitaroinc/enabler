@@ -208,8 +208,11 @@ def version(ctx, kube_context, submodules, repopath):
                 sm_details['commits_ahead'] = sum(1 for c in commits_ahead)
                 sm_details['commits_behind'] = sum(1 for c in commits_behind)
             except TypeError as error:
-                sm_details['branch'] = ''
-                logger.debug(error)
+                if smrepo.head.is_detached:
+                    commit=smrepo.head.commit.hexsha
+                    sm_details['branch'] ='HEAD detached at '+str(commit)
+                else:
+                    logger.error(error)
 
             # Check if we point to any tags
             points_at_tag = smrepo.git.tag('--points-at', 'HEAD')
