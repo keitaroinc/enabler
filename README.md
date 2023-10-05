@@ -1,9 +1,23 @@
-# enabler
+# Enabler
 
 
 Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom cmd commands to configure microservices.
 The repository for the project can be found on this link: https://github.com/keitaroinc/devops-enabler. 
 Enabler needs at least python 3.7, so please check that you have python 3.7 or later for running the commands defined in this application.
+
+
+**Steps for implementation**
+
+Enabler can be used for any project with microservice architecture. It can be integrated by adding the devops-enabler project directory to the project and running this command:
+
+```
+    python3.x -m pip install --editable .
+```
+
+Where x is the current version of python running on your machine. Then it will be possible to access all of the commands defined in this package by running them as described below in Terminal. 
+
+##Enabler Commands
+
 The commands used are organized in 5 groups:
 - apps
 - platform
@@ -17,7 +31,7 @@ Application specific commands such as creation of kubernetes objects such as nam
 - namespace: create a namespace using kubectl commands in the background. There is one argument for this command and it is name of namespace. The command can be run as: 
 
 ```
-enabler apps namespace <name_of_namespace>
+    enabler apps namespace <name_of_namespace>
 ```
 
 
@@ -35,7 +49,7 @@ The commands in this group can be accessed using the prefix enabler platform + n
 
 This command checks to ensure all dependencies such as java jdk 11, docker, helm, kind, skaffold, kubectl, istioctl etc. are present and with the necessary version. The command can be run with this line run while in the folder of the project:
 ```
-enabler preflight
+    enabler preflight
 ```  
 
 **Kind group of commands**
@@ -54,3 +68,12 @@ These commands are used to setup the infrastructure to run kubernetes. With this
 - init: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold 
 - metallb: install and setup metallb on k8s
 - istio: install and setup istio on k8s
+
+
+**Enabler version command**
+
+When excuting this command we can get the working version of Enabler used for the project. This command can be executed with:
+
+```
+    enabler version
+```  
