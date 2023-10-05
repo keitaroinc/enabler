@@ -10,9 +10,11 @@ Enabler needs at least python 3.7, so please check that you have python 3.7 or l
 
 Enabler can be used for any project with microservice architecture. It can be integrated by adding the devops-enabler project directory to the project and running this command:
 
+
 ```
     python3.x -m pip install --editable .
 ```
+
 
 Where x is the current version of python running on your machine. Then it will be possible to access all of the commands defined in this package by running them as described below in Terminal. 
 
@@ -29,6 +31,7 @@ The commands used are organized in 5 groups:
 
 Application specific commands such as creation of kubernetes objects such as namespaces, configmaps etc. The name of the context is taken from the option --kube-context, which defaults to 'keitaro'. The commands in this group can be accessed using the prefix enabler apps + name_of_command.  The commands in this group are the following:
 - namespace: create a namespace using kubectl commands in the background. There is one argument for this command and it is name of namespace. The command can be run as: 
+
 
 ```
     enabler apps namespace <name_of_namespace>
@@ -48,6 +51,8 @@ The commands in this group can be accessed using the prefix enabler platform + n
 **Preflight command**
 
 This command checks to ensure all dependencies such as java jdk 11, docker, helm, kind, skaffold, kubectl, istioctl etc. are present and with the necessary version. The command can be run with this line run while in the folder of the project:
+
+
 ```
     enabler preflight
 ```  
@@ -73,6 +78,7 @@ These commands are used to setup the infrastructure to run kubernetes. With this
 **Enabler version command**
 
 When excuting this command we can get the working version of Enabler used for the project. This command can be executed with:
+
 
 ```
     enabler version
