@@ -29,6 +29,7 @@ The commands used are organized in 5 groups:
 - preflight
 - kind
 - setup
+- version
 
 **Apps group of commands**
 
