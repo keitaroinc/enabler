@@ -6,6 +6,7 @@ The repository for the project can be found on this link: https://github.com/kei
 Enabler needs at least python 3.7, so please check that you have python 3.7 or later for running the commands defined in this application.
 
 
+
 **Steps for implementation**
 
 Enabler can be used for any project with microservice architecture. It can be integrated by adding the devops-enabler project directory to the project and running this command:
@@ -18,7 +19,9 @@ Enabler can be used for any project with microservice architecture. It can be in
 
 Where x is the current version of python running on your machine. Then it will be possible to access all of the commands defined in this package by running them as described below in Terminal. 
 
-##Enabler Commands
+
+
+**Enabler Commands**
 
 The commands used are organized in 5 groups:
 - apps
