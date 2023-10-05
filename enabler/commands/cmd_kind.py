@@ -209,14 +209,14 @@ def kind_configfile_validation(configfile):
     
     keywords_in_file=[] 
     for line in lines:
-        #Check if there is localhost in the .ymal file to see if the port is free
-        index= line.find('localhost:')
+        #Check if there is hostPort field in the .yaml file to check if the port is free
+        index= line.find('hostPort:')
         if index != -1:
-            string_len=len('localhost:')
-            port=line[index+string_len:index+string_len+4]
+            line_content=line.strip().split(" ")
+            port=line_content[1]
             try:
                 if check_if_port_is_free(int(port))==False:
-                    logger.warn("Possible port conflict on localhost:"+port)
+                    logger.warn("Possible port conflict on hostPort: "+port+' in '+ configfile +'.')
             except:
                 pass
 
@@ -228,13 +228,16 @@ def kind_configfile_validation(configfile):
     if len(keywords_in_file)<len(keywords_to_check):
         difference = list(set(keywords_to_check) - set(keywords_in_file))
         missing_string=",".join(difference)
-        logger.warn("Fields: "+missing_string+" missing in the config file")
-    
+        if len(keywords_in_file)==1:
+            logger.warn("Field: "+missing_string+" missing in the config file.")
+        else:
+            logger.warn("Fields: "+missing_string+" missing in the config file.")
+
 def check_if_port_is_free(port_number):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(1)  # Adjust the timeout as needed
-            s.bind(("127.0.0.1", port_number))
+            s.settimeout(2)  
+            s.bind(("127.0.0.1",port_number))
             s.listen(1)
     except (socket.error, ConnectionRefusedError):
         return False
