@@ -225,18 +225,19 @@ def kind_configfile_validation(configfile):
             if f'{key}:' in line[0:len(key)+1]: 
                 keywords_in_file.append(key)
 
-    if len(keywords_in_file)<len(keywords_to_check):
-        difference = list(set(keywords_to_check) - set(keywords_in_file))
-        missing_string=",".join(difference)
-        if len(keywords_in_file)==1:
-            logger.warn("Field: "+missing_string+" missing in the config file.")
-        else:
-            logger.warn("Fields: "+missing_string+" missing in the config file.")
+    #Get only unique key words that are missing from yaml
+    difference = list(set(keywords_to_check) - set(keywords_in_file))
+    missing_string=",".join(difference)
+
+    if len(difference)==1:
+        logger.warn("Field "+missing_string+" missing in "+configfile+'.')
+    elif len(difference)>=2:
+        logger.warn("Fields "+missing_string+" missing in "+configfile+'.')
 
 def check_if_port_is_free(port_number):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(2)  
+            s.settimeout(2) 
             s.bind(("127.0.0.1",port_number))
             s.listen(1)
     except (socket.error, ConnectionRefusedError):
