@@ -205,11 +205,15 @@ def metallb(ctx, kube_context):
 
 # Istio setup
 @cli.command('istio', short_help='Setup Istio')
+@click.argument('monitoring_tools',
+                required=False
+                )
 @click.pass_context
 @pass_environment
-def istio(ctx, kube_context):
+def istio(ctx, kube_context,monitoring_tools):
     """Install and setup istio on k8s"""
     kube_context = ctx.kube_context
+    kube_context='vmt'
 
     # Run verify install to check whether we are ready to install istio
     try:
@@ -228,14 +232,14 @@ def istio(ctx, kube_context):
     # Install Istio
     logger.info('Installing istio, please wait...')
     with click_spinner.spinner():
-        try:
-            istio_install = s.run(['istioctl',
-                                   'manifest',
-                                   'apply',
-                                   '-y',
-                                   '--set',
-                                   'profile=default',
-                                   '--set',
+        istio_command=['istioctl',
+                        'manifest',
+                        'apply',
+                        '-y',
+                        '--set',
+                        'profile=default']
+        if monitoring_tools=='monitoring-tools':
+            monitoring_config=['--set',
                                    'addonComponents.grafana.enabled=true',
                                    '--set',
                                    'addonComponents.kiali.enabled=true',
@@ -246,9 +250,13 @@ def istio(ctx, kube_context):
                                    '--set',
                                    'values.kiali.dashboard.jaegerURL=http://jaeger-query:16686',  # noqa
                                    '--set',
-                                   'values.kiali.dashboard.grafanaURL=http://grafana:3000',  # noqa
-                                   '--context',
-                                   'kind-' + kube_context],
+                                   'values.kiali.dashboard.grafanaURL=http://grafana:3000']  # noqa
+            istio_command.extend(monitoring_config)
+            
+        istio_command.append('--context')
+        istio_command.append('kind-'+ kube_context)
+        try:
+            istio_install = s.run(istio_command,
                                   capture_output=True, check=True)
             logger.info('Istio installed')
             logger.debug(istio_install.stdout.decode('utf-8'))
