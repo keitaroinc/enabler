@@ -7,6 +7,7 @@ import subprocess as s
 import docker
 import os
 from time import sleep
+import socket
 
 # Kind group of commands
 @click.group('kind', short_help='Manage kind clusters')
@@ -35,7 +36,9 @@ def create(ctx, kube_context, configfile):
     if not os.path.exists(configfile) or extension!='.yaml':
         logger.error('Config file not found.')
         raise click.Abort()
-        
+    
+    kind_configfile_validation(configfile)
+
     # Check if kind cluster is already created    
     if kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
@@ -193,3 +196,51 @@ def stop(ctx, kube_context):
         logger.info('Kind cluster ' + kube_context + ' was stopped.')
     else:
         logger.error('Kind cluster \'' + kube_context + '\' does not exist.')
+
+
+#Functions to check if config file has neccessary fields and localhost port is free
+def kind_configfile_validation(configfile):
+    """Validates kind-cluster.yaml file"""
+    with open(configfile, 'r') as yaml_file:
+        yaml_content = yaml_file.read()
+
+    keywords_to_check = ['kind', 'apiVersion', 'nodes']
+    lines = yaml_content.split('\n')
+    
+    keywords_in_file=[] 
+    for line in lines:
+        #Check if there is hostPort field in the .yaml file to check if the port is free
+        index= line.find('hostPort:')
+        if index != -1:
+            line_content=line.strip().split(" ")
+            port=line_content[1]
+            try:
+                if check_if_port_is_free(int(port))==False:
+                    logger.warn("Possible port conflict on hostPort: "+port+' in '+ configfile +'.')
+            except:
+                pass
+
+        #Check if all key parameters are present and at level 1
+        for key in keywords_to_check:
+            if f'{key}:' in line[0:len(key)+1]: 
+                keywords_in_file.append(key)
+
+    #Get only unique key words that are missing from yaml
+    difference = list(set(keywords_to_check) - set(keywords_in_file))
+    missing_string=",".join(difference)
+
+    if len(difference)==1:
+        logger.warn("Field "+missing_string+" missing in "+configfile+'.')
+    elif len(difference)>=2:
+        logger.warn("Fields "+missing_string+" missing in "+configfile+'.')
+
+def check_if_port_is_free(port_number):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(2) 
+            s.bind(("127.0.0.1",port_number))
+            s.listen(1)
+    except (socket.error, ConnectionRefusedError):
+        return False
+
+    return True
