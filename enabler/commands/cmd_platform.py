@@ -15,7 +15,7 @@ import subprocess as s
 @click.group('platform', short_help='Platform commands')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):
+def cli(ctx, kube_context_cli):
     """Platform commands to help with handling the codebase and repo"""
     pass
 
@@ -30,7 +30,7 @@ def cli(ctx, kube_context):
                 default=os.getcwd())
 @click.pass_context
 @pass_environment
-def init(ctx, kube_context, submodules, repopath):
+def init(ctx,  kube_context_cli, submodules, repopath):
     """Init the platform by doing submodule init and checkout
     all submodules on master"""
 
@@ -46,18 +46,21 @@ def init(ctx, kube_context, submodules, repopath):
                 smodule.update()
                 logger.info('Fetching latest changes for {}'.format(submodule))
             except Exception as e:
-                logger.error('An error occurred while updating {submodule}: {e}'.format(submodule,e))
+                logger.error(f'An error occurred while updating {submodule}: {e}'.format(submodule,e))
 
     logger.info('Platform initialized.')
 
 
 @cli.command('info', short_help='Get info on platform')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def info(ctx, kube_context):
+def info(ctx,  kube_context_cli, kube_context):
     """Get info on platform and platform components"""
-    kube_context = ctx.kube_context
-
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
     try:
         gw_url = s.run(['kubectl',
                         '--context',
@@ -86,7 +89,7 @@ def info(ctx, kube_context):
                 default=2048)
 @click.pass_context
 @pass_environment
-def keys(ctx, kube_context, bits):
+def keys(ctx,  kube_context_cli, bits):
     """Generate encryption keys used by the application services"""
     # Locations, we can argument these if need be
     keys_dir = 'infrastructure/keys/'
@@ -142,7 +145,7 @@ def keys(ctx, kube_context, bits):
                 default=os.getcwd())
 @click.pass_context
 @pass_environment
-def release(ctx, kube_context, version, submodules, repopath):
+def release(ctx,  kube_context_cli, version, submodules, repopath):
     """Release platform by tagging platform repo and
     tagging all individual components (git submodules)
     using their respective SHA that the submodules point at"""
@@ -164,7 +167,7 @@ def release(ctx, kube_context, version, submodules, repopath):
                 default=os.getcwd())
 @click.pass_context
 @pass_environment
-def version(ctx, kube_context, submodules, repopath):
+def version(ctx, kube_context_cli, submodules, repopath):
     """Check versions of microservices in git submodules
         You can provide a comma separated list of submodules
         or you can use 'all' for all submodules"""
