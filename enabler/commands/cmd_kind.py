@@ -13,7 +13,7 @@ import socket
 @click.group('kind', short_help='Manage kind clusters')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context1):
+def cli(ctx, kube_context_cli):
     """Manage kind clusters.
     The name of the cluster is taken from the option --kube-context
     which defaults to 'keitaro'"""
@@ -29,7 +29,7 @@ def cli(ctx, kube_context1):
               required=False)
 @click.pass_context
 @pass_environment
-def create(ctx, kube_context1, kube_context, configfile):
+def create(ctx, kube_context_cli, kube_context, configfile):
     """Create a kind cluster"""
   
     if kube_context is None:
@@ -70,7 +70,7 @@ def create(ctx, kube_context1, kube_context, configfile):
               required=False)
 @click.pass_context
 @pass_environment
-def delete(ctx, kube_context1, kube_context):
+def delete(ctx, kube_context_cli, kube_context):
     """Delete a kind cluster"""
     # Check if the kind cluster exists
     if ctx.kube_context is not None:
@@ -119,7 +119,7 @@ def status(ctx, kube_context):
               required=False)
 @click.pass_context
 @pass_environment
-def start(ctx,kube_context1, kube_context):
+def start(ctx,kube_context_cli, kube_context):
     """Start kind cluster"""
 
     # Kind creates containers with a label io.x-k8s.kind.cluster
@@ -190,7 +190,7 @@ def start(ctx,kube_context1, kube_context):
               required=False)
 @click.pass_context
 @pass_environment
-def stop(ctx,kube_context1, kube_context):
+def stop(ctx,kube_context_cli, kube_context):
     """Stop kind cluster"""
     # Check if the cluster exists
     if ctx.kube_context is not None:
