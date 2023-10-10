@@ -6,7 +6,7 @@ import click
 @click.group('version', short_help='Get current version of Enabler', invoke_without_command=True)
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):   
+def cli(ctx, kube_context_cli):   
     """Get current version of Enabler"""
     distribution = pkg_resources.get_distribution("enabler")
     version = distribution.version
