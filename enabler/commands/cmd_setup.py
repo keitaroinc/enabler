@@ -100,6 +100,9 @@ def metallb(ctx, kube_context_cli, kube_context):
     # Check if metallb is installed
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     try:
         metallb_exists = s.run(['helm',
@@ -221,6 +224,9 @@ def istio(ctx, kube_context_cli,kube_context, monitoring_tools):
     """Install and setup istio on k8s"""
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Run verify install to check whether we are ready to install istio
     try:

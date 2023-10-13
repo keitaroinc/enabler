@@ -16,7 +16,7 @@ import socket
 def cli(ctx, kube_context_cli):
     """Manage kind clusters.
     The name of the cluster is taken from the option --kube-context
-    which defaults to 'keitaro'"""
+    """
     pass
 
 
@@ -32,9 +32,11 @@ def cli(ctx, kube_context_cli):
 def create(ctx, kube_context_cli, kube_context, configfile):
     """Create a kind cluster"""
   
-    if kube_context is None:
+    if ctx.kube_context is not None:
         kube_context=ctx.kube_context
-
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     #Check if config file exists 
     base_name, extension = os.path.splitext(configfile)
@@ -75,6 +77,10 @@ def delete(ctx, kube_context_cli, kube_context):
     # Check if the kind cluster exists
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
+    
     if not kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' doesn\'t exist')
         raise click.Abort()
@@ -129,6 +135,9 @@ def start(ctx,kube_context_cli, kube_context):
 
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     
     kind_cp = kube_context + '-control-plane'
@@ -195,6 +204,9 @@ def stop(ctx,kube_context_cli, kube_context):
     # Check if the cluster exists
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Kind creates containers with a label io.x-k8s.kind.cluster
     # Kind naming is clustername-control-plane and clustername-worker{x}

@@ -10,6 +10,8 @@ import click_spinner
 import git
 import os
 import subprocess as s
+import pkg_resources
+
 
 # App group of commands
 @click.group('platform', short_help='Platform commands')
@@ -61,6 +63,9 @@ def info(ctx,  kube_context_cli, kube_context):
     """Get info on platform and platform components"""
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
     try:
         gw_url = s.run(['kubectl',
                         '--context',

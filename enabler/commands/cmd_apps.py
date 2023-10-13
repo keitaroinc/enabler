@@ -29,6 +29,9 @@ def ns(ctx, kube_context_cli, kube_context, name):
 
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Create a namespace in kubernetes
     ns_exists = s.run(['kubectl',
