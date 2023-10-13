@@ -14,7 +14,7 @@ import tarfile
 @click.group('setup', short_help='Setup infrastructure services')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):
+def cli(ctx, kube_context_cli):
     """Setup infrastructure services on kubernetes.
     The name of the context is taken from the option --kube-context
     which defaults to 'keitaro'"""
@@ -25,7 +25,7 @@ def cli(ctx, kube_context):
 @cli.command('init', short_help='Initialize dependencies')
 @click.pass_context
 @pass_environment
-def init(ctx, kube_context):
+def init(ctx, kube_context_cli):
     """Download binaries for all dependencies"""
 
     # Figure out what kind of OS are we on
@@ -90,12 +90,19 @@ def init(ctx, kube_context):
 
 # Metallb setup
 @cli.command('metallb', short_help='Setup metallb')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def metallb(ctx, kube_context):
+def metallb(ctx, kube_context_cli, kube_context):
     """Install and setup metallb on k8s"""
     # Check if metallb is installed
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     try:
         metallb_exists = s.run(['helm',
@@ -205,15 +212,21 @@ def metallb(ctx, kube_context):
 
 # Istio setup
 @cli.command('istio', short_help='Setup Istio')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.argument('monitoring_tools',
                 required=False
                 )
 @click.pass_context
 @pass_environment
-def istio(ctx, kube_context,monitoring_tools):
+def istio(ctx, kube_context_cli,kube_context, monitoring_tools):
     """Install and setup istio on k8s"""
-    kube_context = ctx.kube_context
-    kube_context='vmt'
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Run verify install to check whether we are ready to install istio
     try:
