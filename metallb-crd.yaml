@@ -1,7 +1,7 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: vmt-ip-pool
+  name: ip-pool
   namespace: metallb
 spec:
   addresses:
@@ -15,5 +15,5 @@ metadata:
   namespace: metallb 
 spec:
   ipAddressPools:
-  - vmt-ip-pool
+  - ip-pool
 
