@@ -189,18 +189,18 @@ def metallb(ctx, kube_context_cli, kube_context):
     # Install metallb on the cluster
     try:
         helm_metallb = s.run(['helm',
-                              'install',
-                              '--kube-context',
-                              'kind-' + kube_context,
-                              'metallb',
-                              '--set',
-                              metallb_config,
-                              '-n',
-                              'metallb',
-                              '--version',
-                              '3.0.12',
-                              'bitnami/metallb'],
-                             capture_output=True, check=True)
+                        'install',
+                        '--kube-context',
+                        'kind-' + kube_context,
+                        'metallb',
+                    #   '--set',
+                    #   metallb_config,
+                        '-n',
+                        'metallb',
+                        '--version',
+                        '4.6.0',
+                        'bitnami/metallb'],
+                        capture_output=True, check=True)
 
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
