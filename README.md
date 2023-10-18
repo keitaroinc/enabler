@@ -68,7 +68,7 @@ This command checks to ensure all dependencies such as java jdk 11, docker, helm
 **Kind group of commands**
 
 This command group is used to Manage kind clusters. The name of the cluster is taken from the option --kube-context, which defaults to 'keitaro'. They can be accessed by using enabler kind + name_of_command. 
-- create: used to create a kind cluster, with configfile as an argument. 
+- create: used to create a kind cluster, with configfile as an argument. The deafult config file is kind-cluster.yaml.
 - delete : command that checks if cluster exists and then deletes it.
 - status: to check the status of cluster
 - start: with this command we find the containers with a label io.x-k8s.kind.cluster, check status and ports, start them and then configure kubectl context
@@ -85,7 +85,7 @@ All commands in this group have a --kube-context option, which should be defined
 These commands are used to setup the infrastructure to run kubernetes. With this group we can download the necessary packages and install them. To run commands from this group we use enabler setup + name_of_command.
 - init: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold 
 - metallb: install and setup metallb on k8s
-  This command has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this comand in Terminal:
+  This command has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this command in Terminal:
   '''
     enabler setup metallb --kube-context keitaro
   '''
@@ -102,7 +102,7 @@ These commands are used to setup the infrastructure to run kubernetes. With this
 
 **Enabler version command**
 
-When excuting this command we can get the working version of Enabler used for the project. This command can be executed with:
+When executing this command we can get the working version of Enabler used for the project. This command can be executed with:
 
 
 ```
