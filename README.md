@@ -77,7 +77,15 @@ These commands are used to setup the infrastructure to run kubernetes. With this
 - init: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold 
 - metallb: install and setup metallb on k8s
 - istio: install and setup istio on k8s
-
+  If the command istio is executed with the argument monitoring-tools, i.e:
+  '''
+    enabler  setup istio monitoring-tools --kube-context keitaro
+  '''
+  Then tools needed to monitor the cluster, such as grafana kiali and prometheus, will be installed as well. These applications can provide insights into the performance and behavior of applications and infrastructure on a cluster environment. In order to be able to access the results from grafana through the URL grafana.local, a new record in /etc/hosts should be added. Open /etc/hosts with your  preferred text editor and add the following line:
+  
+  '''
+    172.18.255.246 grafana.local
+  '''
 
 **Enabler version command**
 
