@@ -199,8 +199,6 @@ def metallb(ctx, kube_context_cli, kube_context):
         helm_metallb = s.run(['helm',
                               'install',
                               'metallb',
-                               '-f',
-                               'enabler/metallb-crd.yaml',
                                '--kube-context',
                               'kind-' + kube_context,
                               '--version',
