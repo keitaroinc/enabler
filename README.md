@@ -48,9 +48,9 @@ The commands in this group can be accessed using the prefix enabler platform + n
 - init:  Init the platform by doing submodule init and checkout all submodules on master
 - info:      Get info on platform and platform components
   This command has a --kube-context option, which should be defined as the name of the kind cluster. The command can be run as: 
-  '''
+  ```
     enabler platform info --kube-context keitaro
-  '''
+  ```
 - keys: Generate encryption keys used by the application services
 - release: Release platform by tagging platform repo and   tagging all individual components (git submodules) using their respective SHA that the submodules point at
 - version: Check versions of microservices in git submodules you can provide a comma separated list of submodules or you can use 'all' for all submodules
@@ -75,9 +75,9 @@ This command group is used to Manage kind clusters. The name of the cluster is t
 - stop: with this command we find the containers with a label io.x-k8s.kind.cluster, check status and stop them 
 
 All commands in this group have a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this command in Terminal:
-  '''
+  ```
     enabler kind name_of_command --kube-context keitaro
-  '''
+  ```
 
 
 **Setup group of commands**
@@ -86,19 +86,19 @@ These commands are used to setup the infrastructure to run kubernetes. With this
 - init: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold 
 - metallb: install and setup metallb on k8s
   This command has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this command in Terminal:
-  '''
+  ```
     enabler setup metallb --kube-context keitaro
-  '''
+  ```
 - istio: install and setup istio on k8s
   If the command istio is executed with the argument monitoring-tools, i.e:
-  '''
+  ```
     enabler  setup istio monitoring-tools --kube-context keitaro
-  '''
+  ```
   Then tools needed to monitor the cluster, such as grafana kiali and prometheus, will be installed as well. These applications can provide insights into the performance and behavior of applications and infrastructure on a cluster environment. In order to be able to access the results from grafana through the URL grafana.local, a new record in /etc/hosts should be added. Open /etc/hosts with your  preferred text editor and add the following line:
   
-  '''
+  ```
     172.18.255.246 grafana.local
-  '''
+  ```
 
 **Enabler version command**
 
