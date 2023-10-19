@@ -35,7 +35,7 @@ The commands used are organized in 6 groups:
 
 Application specific commands such as creation of kubernetes objects such as namespaces, configmaps etc. The name of the context is taken from the option --kube-context, which defaults to 'keitaro'. The commands in this group can be accessed using the prefix enabler apps + name_of_command.  There is only one command in this group and it is:
 - namespace: create a namespace using kubectl commands in the background. 
-  There is one argument for this command and it is name of namespace. This command also has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this comand in Terminal:
+  There is one argument for this command and it is name of namespace. This command also has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this command in Terminal:
 
 ```
     enabler apps namespace <name_of_namespace> --kube-context keitaro
@@ -68,7 +68,7 @@ This command checks to ensure all dependencies such as java jdk 11, docker, helm
 **Kind group of commands**
 
 This command group is used to Manage kind clusters. The name of the cluster is taken from the option --kube-context, which defaults to 'keitaro'. They can be accessed by using enabler kind + name_of_command. 
-- create: used to create a kind cluster, with configfile as an argument. The deafult config file is kind-cluster.yaml.
+- create: used to create a kind cluster, with config file as an argument. The default name of the config file is kind-cluster.yaml.
 - delete : command that checks if cluster exists and then deletes it.
 - status: to check the status of cluster
 - start: with this command we find the containers with a label io.x-k8s.kind.cluster, check status and ports, start them and then configure kubectl context
