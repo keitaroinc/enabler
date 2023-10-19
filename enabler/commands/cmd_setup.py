@@ -9,12 +9,13 @@ import urllib.request
 import os
 import stat
 import tarfile
+import yaml
 
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):
+def cli(ctx, kube_context_cli):
     """Setup infrastructure services on kubernetes.
     The name of the context is taken from the option --kube-context
     which defaults to 'keitaro'"""
@@ -25,7 +26,7 @@ def cli(ctx, kube_context):
 @cli.command('init', short_help='Initialize dependencies')
 @click.pass_context
 @pass_environment
-def init(ctx, kube_context):
+def init(ctx, kube_context_cli):
     """Download binaries for all dependencies"""
 
     # Figure out what kind of OS are we on
@@ -90,12 +91,19 @@ def init(ctx, kube_context):
 
 # Metallb setup
 @cli.command('metallb', short_help='Setup metallb')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def metallb(ctx, kube_context):
+def metallb(ctx, kube_context_cli, kube_context):
     """Install and setup metallb on k8s"""
     # Check if metallb is installed
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     try:
         metallb_exists = s.run(['helm',
@@ -147,12 +155,19 @@ def metallb(ctx, kube_context):
     logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
                 metallb_ips[0] + ' - ' + metallb_ips[-1])
 
-    # Metallb layer2 configuration
-    metallb_config = (
-                   'configInline.address-pools[0].name=default,'
-                   'configInline.address-pools[0].protocol=layer2,'
-                   'configInline.address-pools[0].addresses[0]='
-                    + metallb_ips[0] + '-' + metallb_ips[-1])
+    # Dynamically set the IP Address range in the CRD .yaml file
+    yaml_file_path='enabler/metallb-crd.yaml'
+    with open(yaml_file_path, 'r') as yaml_file:
+        config = list(yaml.safe_load_all(yaml_file))
+
+    ip_string= metallb_ips[0] + ' - ' + metallb_ips[-1]
+
+    for doc in config:
+        if 'kind' in doc and doc['kind'] == 'IPAddressPool':
+            doc['spec']['addresses'] = [ip_string]
+
+    with open(yaml_file_path, 'w') as yaml_file:
+        yaml.dump_all(config, yaml_file, default_flow_style=False)
 
     # Create a namespace for metallb if it doesn't exist
     ns_exists = s.run(['kubectl',
@@ -183,17 +198,22 @@ def metallb(ctx, kube_context):
     try:
         helm_metallb = s.run(['helm',
                               'install',
-                              '--kube-context',
-                              'kind-' + kube_context,
                               'metallb',
-                              '--set',
-                              metallb_config,
+                               '--kube-context',
+                              'kind-' + kube_context,
+                              '--version',
+                              '4.6.0',
+                              'bitnami/metallb' ,                            
                               '-n',
                               'metallb',
-                              '--version',
-                              '3.0.12',
-                              'bitnami/metallb'],
+                              '--wait'],
                              capture_output=True, check=True)
+        # Apply configuration from CRD file  
+        config_metallb=s.run(['kubectl',
+                                'apply',
+                                '-f',
+                                'enabler/metallb-crd.yaml'],
+                                capture_output=True, check=True)
 
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
@@ -205,11 +225,21 @@ def metallb(ctx, kube_context):
 
 # Istio setup
 @cli.command('istio', short_help='Setup Istio')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
+@click.argument('monitoring_tools',
+                required=False
+                )
 @click.pass_context
 @pass_environment
-def istio(ctx, kube_context):
+def istio(ctx, kube_context_cli,kube_context, monitoring_tools):
     """Install and setup istio on k8s"""
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Run verify install to check whether we are ready to install istio
     try:
@@ -228,14 +258,14 @@ def istio(ctx, kube_context):
     # Install Istio
     logger.info('Installing istio, please wait...')
     with click_spinner.spinner():
-        try:
-            istio_install = s.run(['istioctl',
-                                   'manifest',
-                                   'apply',
-                                   '-y',
-                                   '--set',
-                                   'profile=default',
-                                   '--set',
+        istio_command=['istioctl',
+                        'manifest',
+                        'apply',
+                        '-y',
+                        '--set',
+                        'profile=default']
+        if monitoring_tools=='monitoring-tools':
+            monitoring_config=['--set',
                                    'addonComponents.grafana.enabled=true',
                                    '--set',
                                    'addonComponents.kiali.enabled=true',
@@ -246,9 +276,14 @@ def istio(ctx, kube_context):
                                    '--set',
                                    'values.kiali.dashboard.jaegerURL=http://jaeger-query:16686',  # noqa
                                    '--set',
-                                   'values.kiali.dashboard.grafanaURL=http://grafana:3000',  # noqa
-                                   '--context',
-                                   'kind-' + kube_context],
+                                   'values.kiali.dashboard.grafanaURL=http://grafana:3000']  # noqa
+            istio_command.extend(monitoring_config)
+            
+        istio_command.append('--context')
+        istio_command.append('kind-'+ kube_context)
+        istio_command.append('--wait')
+        try:
+            istio_install = s.run(istio_command,
                                   capture_output=True, check=True)
             logger.info('Istio installed')
             logger.debug(istio_install.stdout.decode('utf-8'))
@@ -256,3 +291,12 @@ def istio(ctx, kube_context):
             logger.critical('Istio installation failed')
             logger.critical(error.stderr.decode('utf-8'))
             raise click.Abort()
+        if monitoring_tools=='monitoring-tools':
+            try:
+                grafana_virtual_service=s.run(['kubectl','apply','-f','enabler/grafana-vs.yaml'],
+                                  capture_output=True, check=True)
+            except Exception as e:
+                logger.error('Error setting grafana URL')
+                logger.error(str(e))
+            
+                

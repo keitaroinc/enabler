@@ -7,15 +7,16 @@ import subprocess as s
 import docker
 import os
 from time import sleep
+import socket
 
 # Kind group of commands
 @click.group('kind', short_help='Manage kind clusters')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):
+def cli(ctx, kube_context_cli):
     """Manage kind clusters.
     The name of the cluster is taken from the option --kube-context
-    which defaults to 'keitaro'"""
+    """
     pass
 
 
@@ -23,25 +24,32 @@ def cli(ctx, kube_context):
 @click.argument('configfile',
                 type=click.Path(exists=True),
                 default='kind-cluster.yaml')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def create(ctx, kube_context, configfile):
+def create(ctx, kube_context_cli, kube_context, configfile):
     """Create a kind cluster"""
-    
-    kube_context = ctx.kube_context
-    
+  
+    if ctx.kube_context is not None:
+        kube_context=ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
+
     #Check if config file exists 
     base_name, extension = os.path.splitext(configfile)
     if not os.path.exists(configfile) or extension!='.yaml':
         logger.error('Config file not found.')
         raise click.Abort()
+    
+    kind_configfile_validation(configfile)
         
-    # Check if kind cluster is already created    
+    #Check if kind cluster is already created
     if kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
-
-    # Create the kind cluster
     try:
         logger.debug('Running: `kind create cluster`')
         create_cluster = s.run(['kind',
@@ -57,13 +65,22 @@ def create(ctx, kube_context, configfile):
                         str(error))
 
 
+
 @cli.command('delete', short_help='Delete cluster')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def delete(ctx, kube_context):
+def delete(ctx, kube_context_cli, kube_context):
     """Delete a kind cluster"""
     # Check if the kind cluster exists
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
+    
     if not kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' doesn\'t exist')
         raise click.Abort()
@@ -82,12 +99,16 @@ def delete(ctx, kube_context):
 
 
 @cli.command('status', short_help='Cluster status')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
 def status(ctx, kube_context):
     """Check the status of the kind cluster"""
     # Check if the cluster exists
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
     if kind.kind_get(kube_context):
         if kube.kubectl_info(kube_context):
             logger.info('Kind cluster \'' + kube_context + '\' is running')
@@ -99,20 +120,30 @@ def status(ctx, kube_context):
 
 
 @cli.command('start', short_help='Start cluster')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def start(ctx, kube_context):
+def start(ctx,kube_context_cli, kube_context):
     """Start kind cluster"""
-    # Check if the cluster exists
-    kube_context = ctx.kube_context
 
     # Kind creates containers with a label io.x-k8s.kind.cluster
     # Kind naming is clustername-control-plane and clustername-worker{x}
     # The idea is to find the containers check status and ports
     # and start them then configure kubectl context
+
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
+
+    
     kind_cp = kube_context + '-control-plane'
     kind_workers = kube_context + '-worker'
 
+    # Check if the cluster exists
     if kind.kind_get(kube_context):
         if kube.kubectl_info(kube_context):
             logger.info('Kind cluster \'' + kube_context + '\' is running')
@@ -163,12 +194,19 @@ def start(ctx, kube_context):
 
 
 @cli.command('stop', short_help='Stop cluster')
+@click.option('--kube-context',
+              help='The kubernetes context to use',
+              required=False)
 @click.pass_context
 @pass_environment
-def stop(ctx, kube_context):
+def stop(ctx,kube_context_cli, kube_context):
     """Stop kind cluster"""
     # Check if the cluster exists
-    kube_context = ctx.kube_context
+    if ctx.kube_context is not None:
+        kube_context = ctx.kube_context
+    if ctx.kube_context is None and kube_context is None:
+        logger.error("--kube-context was not specified")
+        raise click.Abort()
 
     # Kind creates containers with a label io.x-k8s.kind.cluster
     # Kind naming is clustername-control-plane and clustername-worker{x}
@@ -193,3 +231,61 @@ def stop(ctx, kube_context):
         logger.info('Kind cluster ' + kube_context + ' was stopped.')
     else:
         logger.error('Kind cluster \'' + kube_context + '\' does not exist.')
+
+
+
+#Functions to check if config file has neccessary fields and localhost port is free
+def kind_configfile_validation(configfile):
+    """Validates kind-cluster.yaml file"""
+
+    #Get content of configfile
+    with open(configfile, 'r') as yaml_file:
+        yaml_content = yaml_file.read()
+
+    keywords_to_check = ['kind', 'apiVersion', 'nodes']
+    lines = yaml_content.split('\n')
+    
+    keywords_in_file=[] 
+    for line in lines:
+        #Check if there is hostPort field in the .yaml file to check if the port is free
+        index= line.find('hostPort:')
+        if index != -1:
+            line_content=line.strip().split(" ")
+            port=line_content[1]
+            try:
+                if check_if_port_is_free(int(port))==False:
+                    logger.warn("Possible port conflict on hostPort: "+port+' in '+ configfile +'.')
+            except:
+                pass
+
+        #Check if all key parameters are present and at level 1
+        for key in keywords_to_check:
+            if f'{key}:' in line[0:len(key)+1]: 
+                keywords_in_file.append(key)
+
+    #Get only unique key words that are missing from yaml
+    difference = list(set(keywords_to_check) - set(keywords_in_file))
+    missing_string=",".join(difference)
+
+    if len(difference)==1:
+        logger.warn("Field "+missing_string+" missing in "+configfile+'.')
+    elif len(difference)>=2:
+        logger.warn("Fields "+missing_string+" missing in "+configfile+'.')
+
+def check_if_port_is_free(port_number):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(2) 
+            s.bind(("127.0.0.1",port_number))
+            s.listen(1)
+    except (socket.error, ConnectionRefusedError):
+        return False
+
+    return True
+
+
+
+
+
+
+   

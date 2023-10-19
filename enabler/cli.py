@@ -45,11 +45,11 @@ class EnablerCLI(click.MultiCommand):
 @click.command(cls=EnablerCLI, context_settings=CONTEXT_SETTINGS)
 @click.option('--kube-context',
               help='The kubernetes context to use',
-              default='keitaro')
+              required=False)
 @click_log.simple_verbosity_option(logger)
 @pass_environment
 def cli(ctx, kube_context):
     """Enabler CLI for ease of setup of microservice based apps"""
-    ctx.kube_context = kube_context
 
-    logger.debug('Using kube-context: kind-' + kube_context)
+    ctx.kube_context = kube_context
+    logger.debug('Using kube-context: kind-' + str(kube_context))

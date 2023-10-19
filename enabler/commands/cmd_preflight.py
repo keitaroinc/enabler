@@ -7,7 +7,7 @@ import subprocess as s
 @click.command('preflight', short_help='Preflight checks')
 @click.pass_context
 @pass_environment
-def cli(ctx, kube_context):
+def cli(ctx, kube_context_cli):
     """Preflight checks to ensure all tools and versions are present"""
     # Check java
     try:
