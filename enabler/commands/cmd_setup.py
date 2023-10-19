@@ -9,6 +9,7 @@ import urllib.request
 import os
 import stat
 import tarfile
+import yaml
 
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
@@ -154,12 +155,19 @@ def metallb(ctx, kube_context_cli, kube_context):
     logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
                 metallb_ips[0] + ' - ' + metallb_ips[-1])
 
-    # Metallb layer2 configuration
-    metallb_config = (
-                   'configInline.address-pools[0].name=default,'
-                   'configInline.address-pools[0].protocol=layer2,'
-                   'configInline.address-pools[0].addresses[0]='
-                    + metallb_ips[0] + '-' + metallb_ips[-1])
+    # Dynamically set the IP Address range in the CRD .yaml file
+    yaml_file_path='enabler/metallb-crd.yaml'
+    with open(yaml_file_path, 'r') as yaml_file:
+        config = list(yaml.safe_load_all(yaml_file))
+
+    ip_string= metallb_ips[0] + ' - ' + metallb_ips[-1]
+
+    for doc in config:
+        if 'kind' in doc and doc['kind'] == 'IPAddressPool':
+            doc['spec']['addresses'] = [ip_string]
+
+    with open(yaml_file_path, 'w') as yaml_file:
+        yaml.dump_all(config, yaml_file, default_flow_style=False)
 
     # Create a namespace for metallb if it doesn't exist
     ns_exists = s.run(['kubectl',
@@ -190,17 +198,22 @@ def metallb(ctx, kube_context_cli, kube_context):
     try:
         helm_metallb = s.run(['helm',
                               'install',
-                              '--kube-context',
-                              'kind-' + kube_context,
                               'metallb',
-                              '--set',
-                              metallb_config,
+                               '--kube-context',
+                              'kind-' + kube_context,
+                              '--version',
+                              '4.6.0',
+                              'bitnami/metallb' ,                            
                               '-n',
                               'metallb',
-                              '--version',
-                              '3.0.12',
-                              'bitnami/metallb'],
+                              '--wait'],
                              capture_output=True, check=True)
+        # Apply configuration from CRD file  
+        config_metallb=s.run(['kubectl',
+                                'apply',
+                                '-f',
+                                'enabler/metallb-crd.yaml'],
+                                capture_output=True, check=True)
 
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
