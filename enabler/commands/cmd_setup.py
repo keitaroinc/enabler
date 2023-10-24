@@ -314,6 +314,7 @@ def istio(ctx, kube_context_cli,kube_context, monitoring_tools):
             
         istio_command.append('--context')
         istio_command.append('kind-'+ kube_context)
+        istio_command.append('--wait')
         try:
             istio_install = s.run(istio_command,
                                   capture_output=True, check=True)
@@ -323,3 +324,12 @@ def istio(ctx, kube_context_cli,kube_context, monitoring_tools):
             logger.critical('Istio installation failed')
             logger.critical(error.stderr.decode('utf-8'))
             raise click.Abort()
+        if monitoring_tools=='monitoring-tools':
+            try:
+                grafana_virtual_service=s.run(['kubectl','apply','-f','enabler/grafana-vs.yaml'],
+                                  capture_output=True, check=True)
+            except Exception as e:
+                logger.error('Error setting grafana URL')
+                logger.error(str(e))
+            
+                
