@@ -160,6 +160,9 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
     ips = [str(ip) for ip in ipaddress.IPv4Network(kind_subnet)]
     metallb_ips = ips[-10:]
 
+    if ip_addresspool is None:
+        ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+
     #Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing.
     #And dynamically set the IP Address range in the compatible .yaml file
     if version.split('.')[0]=='3':
@@ -167,30 +170,11 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
         with open(yaml_file_path, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
         
-        if ip_addresspool is None:
-            ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
         
-        print(config)
-        print(type(config))
-
-        # Split the original string into lines
-        lines = config['data']['config'].split('\n')
-
-        print(lines)
-
-        # Find and replace the line containing 'addresses:'
-        for i, line in enumerate(lines):
-            if 'addresses:' in line:
-                # Replace the line with the new addresses range
-                lines[i+1] =' - ' + ip_addresspool
-
-        # Recreate the modified string
-        modified_string = '\n'.join(lines)
+        modified_string = config['data']['config'][:-32]+ip_addresspool
         
         config['data']['config'] = modified_string 
 
-        print(config)
-        print(type(config['data']['config']))
 
         logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
 
@@ -200,13 +184,11 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
             yaml_file.write(updated_yaml)
 
 
+
     elif int(version.split('.')[0])>=4:
         yaml_file_path='enabler/metallb-crd.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             config = list(yaml.safe_load_all(yaml_file))
-
-        if ip_addresspool is None:
-            ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
 
         logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
         for doc in config:
