@@ -160,23 +160,64 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
     ips = [str(ip) for ip in ipaddress.IPv4Network(kind_subnet)]
     metallb_ips = ips[-10:]
 
-    # Dynamically set the IP Address range in the .yaml file
+    #Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing.
+    #And dynamically set the IP Address range in the compatible .yaml file
+    if version.split('.')[0]=='3':
+        yaml_file_path='enabler/metallb-configmap.yaml'
+        with open(yaml_file_path, 'r') as yaml_file:
+            config = yaml.safe_load(yaml_file)
+        
+        if ip_addresspool is None:
+            ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+        
+        print(config)
+        print(type(config))
 
-    yaml_file_path='enabler/metallb-crd.yaml'
-    with open(yaml_file_path, 'r') as yaml_file:
-        config = list(yaml.safe_load_all(yaml_file))
+        # Split the original string into lines
+        lines = config['data']['config'].split('\n')
 
-    if ip_addresspool is None:
-        ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+        print(lines)
 
-    logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
-    for doc in config:
-        if 'kind' in doc and doc['kind'] == 'IPAddressPool':
-            doc['spec']['addresses'] = [ip_addresspool]
+        # Find and replace the line containing 'addresses:'
+        for i, line in enumerate(lines):
+            if 'addresses:' in line:
+                # Replace the line with the new addresses range
+                lines[i+1] =' - ' + ip_addresspool
 
-    with open(yaml_file_path, 'w') as yaml_file:
-        yaml.dump_all(config, yaml_file, default_flow_style=False)
+        # Recreate the modified string
+        modified_string = '\n'.join(lines)
+        
+        config['data']['config'] = modified_string 
 
+        print(config)
+        print(type(config['data']['config']))
+
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
+
+        updated_yaml=yaml.dump(config, default_flow_style=False)
+        
+        with open(yaml_file_path, 'w') as yaml_file:
+            yaml_file.write(updated_yaml)
+
+
+    elif int(version.split('.')[0])>=4:
+        yaml_file_path='enabler/metallb-crd.yaml'
+        with open(yaml_file_path, 'r') as yaml_file:
+            config = list(yaml.safe_load_all(yaml_file))
+
+        if ip_addresspool is None:
+            ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
+        for doc in config:
+            if 'kind' in doc and doc['kind'] == 'IPAddressPool':
+                doc['spec']['addresses'] = [ip_addresspool]
+
+        with open(yaml_file_path, 'w') as yaml_file:
+            yaml.dump_all(config, yaml_file, default_flow_style=False)
+    else:
+        logger.info('Incompatible format for Metallb version. Please check official versions ')
+    
 
     ns_exists = s.run(['kubectl',
                        'get',
@@ -220,7 +261,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
         config_metallb=s.run(['kubectl',
                                 'apply',
                                 '-f',
-                                'enabler/metallb-crd.yaml'],
+                                yaml_file_path],
                                 capture_output=True, check=True)
 
 
