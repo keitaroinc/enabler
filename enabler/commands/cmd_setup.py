@@ -171,7 +171,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
             config = yaml.safe_load(yaml_file)
         
         
-        modified_string = config['data']['config'][:-32]+ip_addresspool
+        modified_string = config['data']['config'][:-32]+ip_addresspool+"\n"
         
         config['data']['config'] = modified_string 
 
