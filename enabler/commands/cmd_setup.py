@@ -169,7 +169,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
             start_ip=ipaddress.IPv4Address(ip_range[0])
             end_ip=ipaddress.IPv4Address(ip_range[1])
         except:
-            logger.error('Incorect IP address range: '+ ip_addresspool)
+            logger.error('Incorrect IP address range: '+ ip_addresspool)
 
         if start_ip not in ipaddress.IPv4Network(kind_subnet) or end_ip not in ipaddress.IPv4Network(kind_subnet):
             logger.error('Provided IP address range not in kind network. Kind subnet is: ' + kind_subnet)
