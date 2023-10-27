@@ -10,7 +10,7 @@ import os
 import stat
 import tarfile
 import yaml
-import re
+
 
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
@@ -162,6 +162,18 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
 
     if ip_addresspool is None:
         ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+    else:
+        #Check if ip address range is in kind network and print out a warning
+        ip_range=ip_addresspool.strip().split('-')
+        try:
+            start_ip=ipaddress.IPv4Address(ip_range[0])
+            end_ip=ipaddress.IPv4Address(ip_range[1])
+        except:
+            logger.error('Incorect IP address range: '+ ip_addresspool)
+
+        if start_ip not in ipaddress.IPv4Network(kind_subnet) or end_ip not in ipaddress.IPv4Network(kind_subnet):
+            logger.error('Provided IP address range not in kind network. Kind subnet is: ' + kind_subnet)
+            raise click.Abort()
 
     #Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing.
     #And dynamically set the IP Address range in the compatible .yaml file
