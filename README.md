@@ -89,6 +89,8 @@ These commands are used to setup the infrastructure to run kubernetes. With this
   ```
     enabler setup metallb --kube-context keitaro
   ```
+  There are 2 avaliable arguments for this command, which can be assigned as --version (working version of metallb) and --ip-addresspool (selected IP address range designated for metallb). You should keep in mind that the IP address range should always be from the kind network. If not assigned the default value for version is 4.6.0 and the value for the IP address pool is the range of the last 10 addresses from the kind network. 
+  
 - istio: install and setup istio on k8s
   If the command istio is executed with the argument monitoring-tools, i.e:
   ```
