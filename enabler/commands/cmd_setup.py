@@ -11,6 +11,7 @@ import stat
 import tarfile
 import yaml
 
+
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
 @click.pass_context
@@ -94,9 +95,16 @@ def init(ctx, kube_context_cli):
 @click.option('--kube-context',
               help='The kubernetes context to use',
               required=False)
+@click.option('--ip-addresspool',
+              help='IP Address range to be assigned to metallb, default is last 10 addresses from kind network.'
+              'The IP address range should be in the kind network in order for the application to work properly.',
+              required=False)
+@click.option('--version',
+              help='Version of metallb from bitnami. Default version is 4.6.0',
+              default='4.6.0')
 @click.pass_context
 @pass_environment
-def metallb(ctx, kube_context_cli, kube_context):
+def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
     """Install and setup metallb on k8s"""
     # Check if metallb is installed
     if ctx.kube_context is not None:
@@ -147,29 +155,64 @@ def metallb(ctx, kube_context_cli, kube_context):
     client = docker.from_env()
     kind_network = client.networks.get('kind')
     kind_subnet = kind_network.attrs['IPAM']['Config'][0]['Subnet']
-    logger.info('Using kind subnet: ' + kind_subnet)
 
-    # Extract the last 10 ip addresses of the docker bridge subnet
+    # Extract the last 10 ip addresses of the kind subnet
     ips = [str(ip) for ip in ipaddress.IPv4Network(kind_subnet)]
     metallb_ips = ips[-10:]
-    logger.info('Metallb will be configured in Layer 2 mode with the range: ' +
-                metallb_ips[0] + ' - ' + metallb_ips[-1])
 
-    # Dynamically set the IP Address range in the CRD .yaml file
-    yaml_file_path='enabler/metallb-crd.yaml'
-    with open(yaml_file_path, 'r') as yaml_file:
-        config = list(yaml.safe_load_all(yaml_file))
+    if ip_addresspool is None:
+        ip_addresspool= metallb_ips[0] + ' - ' + metallb_ips[-1]
+    else:
+        #Check if ip address range is in kind network and print out a warning
+        ip_range=ip_addresspool.strip().split('-')
+        try:
+            start_ip=ipaddress.IPv4Address(ip_range[0])
+            end_ip=ipaddress.IPv4Address(ip_range[1])
+        except:
+            logger.error('Incorrect IP address range: '+ ip_addresspool)
 
-    ip_string= metallb_ips[0] + ' - ' + metallb_ips[-1]
+        if start_ip not in ipaddress.IPv4Network(kind_subnet) or end_ip not in ipaddress.IPv4Network(kind_subnet):
+            logger.error('Provided IP address range not in kind network. Kind subnet is: ' + kind_subnet)
+            raise click.Abort()
 
-    for doc in config:
-        if 'kind' in doc and doc['kind'] == 'IPAddressPool':
-            doc['spec']['addresses'] = [ip_string]
+    #Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing.
+    #And dynamically set the IP Address range in the compatible .yaml file
+    if version.split('.')[0]=='3':
+        yaml_file_path='enabler/metallb-configmap.yaml'
+        with open(yaml_file_path, 'r') as yaml_file:
+            config = yaml.safe_load(yaml_file)
+        
+        
+        modified_string = config['data']['config'][:-32]+ip_addresspool+"\n"
+        
+        config['data']['config'] = modified_string 
 
-    with open(yaml_file_path, 'w') as yaml_file:
-        yaml.dump_all(config, yaml_file, default_flow_style=False)
 
-    # Create a namespace for metallb if it doesn't exist
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
+
+        updated_yaml=yaml.dump(config, default_flow_style=False)
+        
+        with open(yaml_file_path, 'w') as yaml_file:
+            yaml_file.write(updated_yaml)
+
+
+
+    elif int(version.split('.')[0])>=4:
+        yaml_file_path='enabler/metallb-crd.yaml'
+        with open(yaml_file_path, 'r') as yaml_file:
+            config = list(yaml.safe_load_all(yaml_file))
+
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
+        for doc in config:
+            if 'kind' in doc and doc['kind'] == 'IPAddressPool':
+                doc['spec']['addresses'] = [ip_addresspool]
+
+        with open(yaml_file_path, 'w') as yaml_file:
+            yaml.dump_all(config, yaml_file, default_flow_style=False)
+    else:
+        logger.info('Incompatible format for Metallb version. Please check official versions ')
+    
+
     ns_exists = s.run(['kubectl',
                        'get',
                        'ns',
@@ -202,7 +245,7 @@ def metallb(ctx, kube_context_cli, kube_context):
                                '--kube-context',
                               'kind-' + kube_context,
                               '--version',
-                              '4.6.0',
+                              version,
                               'bitnami/metallb' ,                            
                               '-n',
                               'metallb',
@@ -212,14 +255,16 @@ def metallb(ctx, kube_context_cli, kube_context):
         config_metallb=s.run(['kubectl',
                                 'apply',
                                 '-f',
-                                'enabler/metallb-crd.yaml'],
+                                yaml_file_path],
                                 capture_output=True, check=True)
+
 
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
     except s.CalledProcessError as error:
         logger.error('Could not install metallb')
         logger.error(error.stderr.decode('utf-8'))
+
 
 
 
