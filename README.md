@@ -10,6 +10,8 @@ Enabler requires **Python 3.7 or above**.
 
 Enabler can be used for any project with microservice architecture. Clone it locally to a desired location, navigate to the cloned directory and create a binary for the `enabler` command with `pip`.
 
+>Please note that the following command will replace any other existing `enabler` binary and become the default one.
+
 ```bash
 pip install --editable .
 ```
