@@ -2,7 +2,7 @@
 
 Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices.
 
-The repository for the project can be found on: https://github.com/keitaroinc/devops-enabler.
+The repository for the project can be found on: https://github.com/keitaroinc/enabler.
 
 Enabler requires **Python 3.7 or above**.
 
@@ -16,7 +16,34 @@ Enabler can be used for any project with microservice architecture. Clone it loc
 pip install --editable .
 ```
 
-Then it will be possible to access all of the commands defined in this package by running them as described below in Terminal.
+Then it will be possible to access all of the commands defined in this package by running them as described below.
+
+To check if the installation was successful, please run `which enabler`. That will output the current location of the enabler binary and it should be something like:
+
+```bash
+<home>/<username>/.local/bin/enabler
+```
+
+Running `enabler` should execute the command and provide the initial help reference for how to use it.
+
+```bash
+Usage: enabler [OPTIONS] COMMAND [ARGS]...
+
+  Enabler CLI for ease of setup of microservice based apps
+
+Options:
+  --kube-context TEXT  The kubernetes context to use
+  -v, --verbosity LVL  Either CRITICAL, ERROR, WARNING, INFO or DEBUG
+  --help               Show this message and exit.
+
+Commands:
+  apps       App commands
+  kind       Manage kind clusters
+  platform   Platform commands
+  preflight  Preflight checks
+  setup      Setup infrastructure services
+  version    Get current version of Enabler
+```
 
 ## Commands
 
