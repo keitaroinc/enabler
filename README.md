@@ -1,5 +1,7 @@
 # Enabler
 
+[![flake8 Lint](https://github.com/keitaroinc/enabler/actions/workflows/lint.yml/badge.svg)](https://github.com/keitaroinc/enabler/actions/workflows/lint.yml)
+
 Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices.
 
 ![Enabler logo image](enabler-logo-bw.png)
