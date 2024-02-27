@@ -2,6 +2,8 @@
 
 Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices.
 
+![Enabler logo image](enabler-logo-bw.png)
+
 The repository for the project can be found on: https://github.com/keitaroinc/enabler.
 
 Enabler requires **Python 3.7 or above**.
