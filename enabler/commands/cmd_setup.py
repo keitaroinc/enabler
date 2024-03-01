@@ -10,6 +10,7 @@ import os
 import stat
 import tarfile
 import yaml
+import shutil
 
 
 # Setup group of commands
@@ -30,26 +31,31 @@ def cli(ctx, kube_context_cli):
 def init(ctx, kube_context_cli):
     """Download binaries for all dependencies"""
 
+    # Check if kubectl exists in any directory
+    kubectl_location = shutil.which('kubectl')
+    
     # Figure out what kind of OS are we on
     ostype = os.uname().sysname.lower()
 
-    # URLs for dependencies
-    kubectl_url = 'https://storage.googleapis.com/kubernetes-release/release/v1.17.3/bin/{}/amd64/kubectl'.format(ostype)  # noqa
-    helm_url = 'https://get.helm.sh/helm-v3.1.2-{}-amd64.tar.gz'.format(ostype)
-    istioctl_url = 'https://github.com/istio/istio/releases/download/1.5.1/istioctl-1.5.1-{}.tar.gz'.format(ostype)  # noqa
-    kind_url = 'https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-{}-amd64'.format(ostype)  # noqa
-    skaffold_url = 'https://storage.googleapis.com/skaffold/releases/latest/skaffold-{}-amd64'.format(ostype)  # noqa
+    if kubectl_location:
+        logger.info(f'kubectl found at: {kubectl_location}. Continuing with other dependencies...')
+    else:
+        logger.info('kubectl not found on the system. Attempting to download...')
+        
+        with click_spinner.spinner():
+            # Download kubectl and make executable
+            logger.info('Downloading kubectl...')
+            kubectl_url = 'https://storage.googleapis.com/kubernetes-release/release/v1.17.3/bin/{}/amd64/kubectl'.format(ostype)  # noqa
+            urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
+            st = os.stat('bin/kubectl')
+            os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
+            logger.info('kubectl downloaded!')
 
     with click_spinner.spinner():
-        # Download kubectl and make executable
-        logger.info('Downloading kubectl...')
-        urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
-        st = os.stat('bin/kubectl')
-        os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
-        logger.info('kubectl downloaded!')
-
         # Download helm
         logger.info('Downloading helm...')
+        helm_url = 'https://get.helm.sh/helm-v3.1.2-{}-amd64.tar.gz'.format(ostype)
+        os.makedirs('bin', exist_ok=True)
         urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
         tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
         for member in tar.getmembers():
@@ -60,8 +66,10 @@ def init(ctx, kube_context_cli):
         os.remove('bin/helm.tar.gz')
         logger.info('helm downloaded!')
 
+
         # Download istioctl
         logger.info('Downloading istioctl...')
+        istioctl_url = 'https://github.com/istio/istio/releases/download/1.5.1/istioctl-1.5.1-{}.tar.gz'.format(ostype)  # noqa
         urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
         tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
         tar.extract('istioctl', 'bin')
@@ -71,6 +79,7 @@ def init(ctx, kube_context_cli):
 
         # Download kind and make executable
         logger.info('Downloading kind...')
+        kind_url = 'https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-{}-amd64'.format(ostype)  # noqa
         urllib.request.urlretrieve(kind_url, 'bin/kind')
         st = os.stat('bin/kind')
         os.chmod('bin/kind', st.st_mode | stat.S_IEXEC)
@@ -78,16 +87,17 @@ def init(ctx, kube_context_cli):
 
         # Download skaffold and make executable
         logger.info('Downloading skaffold...')
+        skaffold_url = 'https://storage.googleapis.com/skaffold/releases/latest/skaffold-{}-amd64'.format(ostype)  # noqa
         urllib.request.urlretrieve(skaffold_url, 'bin/skaffold')
         st = os.stat('bin/skaffold')
         os.chmod('bin/skaffold', st.st_mode | stat.S_IEXEC)
         logger.info('skaffold downloaded!\n')
 
-    logger.info('All dependencies downloaded to bin/')
-    logger.info('IMPORTANT: Please add the path to your user profile to ' +
-                os.getcwd() + '/bin directory at the beginning of your PATH')
-    logger.info('$ echo export PATH=' + os.getcwd() + '/bin:$PATH >> ~/.profile')  # noqa
-    logger.info('$ source ~/.profile')
+        logger.info('All dependencies downloaded to bin/')
+        logger.info('IMPORTANT: Please add the path to your user profile to ' +
+                    os.getcwd() + '/bin directory at the beginning of your PATH')
+        logger.info('$ echo export PATH=' + os.getcwd() + '/bin:$PATH >> ~/.profile')  # noqa
+        logger.info('$ source ~/.profile')
 
 
 # Metallb setup
@@ -153,8 +163,22 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool,version):
 
     # Get the Subnet of the kind network
     client = docker.from_env()
-    kind_network = client.networks.get('kind')
-    kind_subnet = kind_network.attrs['IPAM']['Config'][0]['Subnet']
+    networks = client.networks()
+
+
+    # Find the network with name 'kind'
+    kind_network = None  # Initialize kind_network outside the loop
+    for network in networks:
+        if network['Name'] == 'kind':
+            kind_network = network
+            break
+
+    if kind_network is not None:
+        # Do something with kind_network
+        logger.info("Kind network found:", kind_network)
+        kind_subnet = kind_network['IPAM']['Config'][0]['Subnet']
+    else:
+        logger.info("Kind network not found.")
 
     # Extract the last 10 ip addresses of the kind subnet
     ips = [str(ip) for ip in ipaddress.IPv4Network(kind_subnet)]
