@@ -8,7 +8,7 @@ class BasedVersionParamType(click.ParamType):
     def convert(self, value, param, ctx):
         try:
             parse(value)
-            return(value)
+            return (value)
         except TypeError:
             self.fail(
                 '{value!r} is not a valid version, please use semver',

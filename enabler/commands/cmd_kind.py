@@ -9,6 +9,7 @@ import os
 from time import sleep
 import socket
 
+
 # Kind group of commands
 @click.group('kind', short_help='Manage kind clusters')
 @click.pass_context
@@ -48,8 +49,8 @@ def create(ctx, kube_context_cli, kube_context, configfile):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
     try:
-        logger.debug('Running: `kind create cluster`')
-        create_cluster = s.run(['kind',
+        logger.debug('Running: `kind create cluster`')  
+        create_cluster = s.run(['kind',  # noqa
                                 'create',
                                 'cluster',
                                 '--name',
@@ -82,7 +83,7 @@ def delete(ctx, kube_context_cli, kube_context):
     # Delete the kind cluster
     try:
         logger.debug('Running: `kind delete cluster`')
-        create_cluster = s.run(['kind',
+        create_cluster = s.run(['kind',  # noqa
                                 'delete',
                                 'cluster',
                                 '--name',

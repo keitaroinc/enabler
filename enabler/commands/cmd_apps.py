@@ -3,6 +3,7 @@ from enabler.cli import pass_environment, logger
 import click
 import subprocess as s
 
+
 # App group of commands
 @click.group('apps', short_help='App commands')
 @click.pass_context
@@ -51,7 +52,7 @@ def ns(ctx, kube_context_cli, kube_context, name):
                             'kind-' + kube_context],
                            capture_output=True, check=True)
             logger.info('Created a namespace for ' + name)
-            app_ns_label = s.run(['kubectl',
+            app_ns_label = s.run(['kubectl',   # noqa
                                   'label',
                                   'namespace',
                                   name,

@@ -28,5 +28,4 @@ def get_submodules(repo, submodules):
         submodules = submodule_list
     logger.debug('The provided submodules are:')
     logger.debug(submodules)
-
-    return(submodules)
+    return (submodules)

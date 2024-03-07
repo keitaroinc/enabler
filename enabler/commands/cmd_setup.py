@@ -16,6 +16,7 @@ def get_enabler_path():
     enabler_path = os.getcwd()
     return enabler_path
 
+
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
 @click.pass_context
@@ -272,6 +273,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
         logger.error('Could not install metallb')
         logger.error(error.stderr.decode('utf-8'))
 
+
 # Istio setup
 @cli.command('istio', short_help='Setup Istio')
 @click.option('--kube-context',
@@ -315,17 +317,17 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
                          'profile=default']
         if monitoring_tools == 'monitoring-tools':
             monitoring_config = ['--set',
-                                   'addonComponents.grafana.enabled=true',
-                                   '--set',
-                                   'addonComponents.kiali.enabled=true',
-                                   '--set',
-                                   'addonComponents.prometheus.enabled=true',
-                                   '--set',
-                                   'addonComponents.tracing.enabled=true',
-                                   '--set',
-                                   'values.kiali.dashboard.jaegerURL=http://jaeger-query:16686',  # noqa
-                                   '--set',
-                                   'values.kiali.dashboard.grafanaURL=http://grafana:3000']  # noqa
+                                 'addonComponents.grafana.enabled=true',
+                                 '--set',
+                                 'addonComponents.kiali.enabled=true',
+                                 '--set',
+                                 'addonComponents.prometheus.enabled=true',
+                                 '--set',
+                                 'addonComponents.tracing.enabled=true',
+                                 '--set',
+                                 'values.kiali.dashboard.jaegerURL=http://jaeger-query:16686',  # noqa
+                                 '--set',
+                                 'values.kiali.dashboard.grafanaURL=http://grafana:3000']  # noqa
 
         istio_command.extend(monitoring_config)
         istio_command.append('--context')

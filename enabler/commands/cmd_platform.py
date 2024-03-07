@@ -196,7 +196,7 @@ def version(ctx, kube_context_cli, submodules, repopath):
             try:
                 smrepo = git.Repo(submodule)
                 sm_details['present'] = True
-            except git.InvalidGitRepositoryError as error:
+            except git.InvalidGitRepositoryError as error:  # noqa
                 logger.warning(submodule + ': not present')
                 sm_details['present'] = False
                 all_sm_details.append(sm_details)
