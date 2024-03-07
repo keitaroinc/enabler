@@ -344,8 +344,7 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
             raise click.Abort()
         if monitoring_tools == 'monitoring-tools':
             try:
-                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'enabler/grafana-vs.yaml'], # noqa
-                                  capture_output=True, check=True)
+                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'enabler/grafana-vs.yaml'], capture_output=True, check=True) # noqa
             except Exception as e:
                 logger.error('Error setting grafana URL')
                 logger.error(str(e))

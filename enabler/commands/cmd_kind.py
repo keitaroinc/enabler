@@ -49,7 +49,7 @@ def create(ctx, kube_context_cli, kube_context, configfile):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
     try:
-        logger.debug('Running: `kind create cluster`')  
+        logger.debug('Running: `kind create cluster`')
         create_cluster = s.run(['kind',  # noqa
                                 'create',
                                 'cluster',
