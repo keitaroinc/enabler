@@ -16,7 +16,7 @@ class Environment(object):
 
 
 pass_environment = click.make_pass_decorator(Environment, ensure=True)
-cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "commands"))
+cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "commands")) # noqa
 
 # Use logging for nicer handling of log output
 logger = logging.getLogger(__name__)

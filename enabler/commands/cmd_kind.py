@@ -9,6 +9,7 @@ import os
 from time import sleep
 import socket
 
+
 # Kind group of commands
 @click.group('kind', short_help='Manage kind clusters')
 @click.pass_context
@@ -30,40 +31,35 @@ def cli(ctx, kube_context_cli):
 @click.pass_context
 @pass_environment
 def create(ctx, kube_context_cli, kube_context, configfile):
-    """Create a kind cluster"""
-  
     if ctx.kube_context is not None:
-        kube_context=ctx.kube_context
+        kube_context = ctx.kube_context
     if ctx.kube_context is None and kube_context is None:
+
         logger.error("--kube-context was not specified")
         raise click.Abort()
-
-    #Check if config file exists 
+    # Check if config file exists
     base_name, extension = os.path.splitext(configfile)
-    if not os.path.exists(configfile) or extension!='.yaml':
+    if not os.path.exists(configfile) or extension != '.yaml':
         logger.error('Config file not found.')
         raise click.Abort()
-    
     kind_configfile_validation(configfile)
-        
-    #Check if kind cluster is already created
+
+    # Check if kind cluster is already created
     if kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' already exists')
         raise click.Abort()
     try:
         logger.debug('Running: `kind create cluster`')
-        create_cluster = s.run(['kind',
+        create_cluster = s.run(['kind',  # noqa
                                 'create',
                                 'cluster',
                                 '--name',
                                 kube_context,
                                 '--config',
-                                click.format_filename(configfile)],
+                               click.format_filename(configfile)],
                                capture_output=False, check=True)
     except s.CalledProcessError as error:
-        logger.critical('Could not create kind cluster: ' +
-                        str(error))
-
+        logger.critical('Could not create kind cluster: ' + str(error))
 
 
 @cli.command('delete', short_help='Delete cluster')
@@ -80,7 +76,6 @@ def delete(ctx, kube_context_cli, kube_context):
     if ctx.kube_context is None and kube_context is None:
         logger.error("--kube-context was not specified")
         raise click.Abort()
-    
     if not kind.kind_get(kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' doesn\'t exist')
         raise click.Abort()
@@ -88,7 +83,7 @@ def delete(ctx, kube_context_cli, kube_context):
     # Delete the kind cluster
     try:
         logger.debug('Running: `kind delete cluster`')
-        create_cluster = s.run(['kind',
+        create_cluster = s.run(['kind',  # noqa
                                 'delete',
                                 'cluster',
                                 '--name',
@@ -125,7 +120,7 @@ def status(ctx, kube_context):
               required=False)
 @click.pass_context
 @pass_environment
-def start(ctx,kube_context_cli, kube_context):
+def start(ctx, kube_context_cli, kube_context):
     """Start kind cluster"""
 
     # Kind creates containers with a label io.x-k8s.kind.cluster
@@ -139,7 +134,6 @@ def start(ctx,kube_context_cli, kube_context):
         logger.error("--kube-context was not specified")
         raise click.Abort()
 
-    
     kind_cp = kube_context + '-control-plane'
     kind_workers = kube_context + '-worker'
 
@@ -199,7 +193,7 @@ def start(ctx,kube_context_cli, kube_context):
               required=False)
 @click.pass_context
 @pass_environment
-def stop(ctx,kube_context_cli, kube_context):
+def stop(ctx, kube_context_cli, kube_context):
     """Stop kind cluster"""
     # Check if the cluster exists
     if ctx.kube_context is not None:
@@ -224,7 +218,8 @@ def stop(ctx,kube_context_cli, kube_context):
                 if kind_cp in container.name or kind_workers in container.name:
                     if container.status == 'running':
                         container.stop()
-                        logger.debug('Container ' + container.name + ' stopped')
+                        logger.debug('Container ' + container.name
+                                     + ' stopped')
                     else:
                         logger.debug('Container ' + container.name +
                                      ' is already stopped')
@@ -233,59 +228,50 @@ def stop(ctx,kube_context_cli, kube_context):
         logger.error('Kind cluster \'' + kube_context + '\' does not exist.')
 
 
-
-#Functions to check if config file has neccessary fields and localhost port is free
+# Functions to check if config file has neccessary fields
+# and localhost port is free
 def kind_configfile_validation(configfile):
     """Validates kind-cluster.yaml file"""
 
-    #Get content of configfile
+    # Get content of configfile
     with open(configfile, 'r') as yaml_file:
         yaml_content = yaml_file.read()
 
     keywords_to_check = ['kind', 'apiVersion', 'nodes']
     lines = yaml_content.split('\n')
-    
-    keywords_in_file=[] 
+    keywords_in_file = []
     for line in lines:
-        #Check if there is hostPort field in the .yaml file to check if the port is free
-        index= line.find('hostPort:')
+        index = line.find('hostPort:')
         if index != -1:
-            line_content=line.strip().split(" ")
-            port=line_content[1]
-            try:
-                if check_if_port_is_free(int(port))==False:
-                    logger.warn("Possible port conflict on hostPort: "+port+' in '+ configfile +'.')
-            except:
+            line_content = line.strip().split(" ")
+            port = line_content[1]
+            if check_if_port_is_free(int(port)) is not True:
+                logger.warn("Possible port conflict on hostPort: " + port
+                            + ' in ' + configfile + '.')
                 pass
 
-        #Check if all key parameters are present and at level 1
+        # Check if all key parameters are present and at level 1
         for key in keywords_to_check:
-            if f'{key}:' in line[0:len(key)+1]: 
+            if f'{key}:' in line[0:len(key)+1]:
                 keywords_in_file.append(key)
 
-    #Get only unique key words that are missing from yaml
+    # Get only unique key words that are missing from yaml
     difference = list(set(keywords_to_check) - set(keywords_in_file))
-    missing_string=",".join(difference)
+    missing_string = ",".join(difference)
 
-    if len(difference)==1:
+    if len(difference) == 1:
         logger.warn("Field "+missing_string+" missing in "+configfile+'.')
-    elif len(difference)>=2:
+    elif len(difference) >= 2:
         logger.warn("Fields "+missing_string+" missing in "+configfile+'.')
+
 
 def check_if_port_is_free(port_number):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(2) 
-            s.bind(("127.0.0.1",port_number))
+            s.settimeout(2)
+            s.bind(("127.0.0.1", port_number))
             s.listen(1)
     except (socket.error, ConnectionRefusedError):
         return False
 
     return True
-
-
-
-
-
-
-   

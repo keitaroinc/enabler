@@ -1,6 +1,4 @@
 from enabler.cli import logger
-
-import click
 import subprocess as s
 
 
