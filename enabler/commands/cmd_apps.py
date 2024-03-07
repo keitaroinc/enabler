@@ -43,7 +43,7 @@ def ns(ctx, kube_context_cli, kube_context, name):
                       capture_output=True)
     if ns_exists.returncode != 0:
         try:
-            app_ns = s.run(['kubectl',
+            app_ns = s.run(['kubectl',  # noqa
                             'create',
                             'ns',
                             name,

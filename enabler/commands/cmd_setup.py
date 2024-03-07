@@ -10,8 +10,11 @@ import os
 import stat
 import tarfile
 import yaml
-import shutil
 
+
+def get_enabler_path():
+    enabler_path = os.getcwd()
+    return enabler_path
 
 # Setup group of commands
 @click.group('setup', short_help='Setup infrastructure services')
@@ -43,16 +46,12 @@ def init(ctx, kube_context_cli):
 
     with click_spinner.spinner():
         # Download kubectl and make executable
-        kubectl_location = shutil.which('kubectl')
-        if kubectl_location:
-            logger.info(f'kubectl found at: {kubectl_location}')
-        else:
-            logger.info('kubectl not found. Attempting to download...')
-            logger.info('Downloading kubectl...')
-            urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
-            st = os.stat('bin/kubectl')
-            os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
-            logger.info('kubectl downloaded!')
+        logger.info('kubectl not found. Attempting to download...')
+        logger.info('Downloading kubectl...')
+        urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
+        st = os.stat('bin/kubectl')
+        os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
+        logger.info('kubectl downloaded!')
 
         # Download helm
         logger.info('Downloading helm...')
@@ -102,8 +101,8 @@ def init(ctx, kube_context_cli):
               help='The kubernetes context to use',
               required=False)
 @click.option('--ip-addresspool',
-              help='IP Address range to be assigned to metallb, default is last 10 addresses from kind network.'
-              'The IP address range should be in the kind network in order for the application to work properly.',
+              help='IP Address range to be assigned to metallb, default is last 10 addresses from kind network.'   # noqa
+              'The IP address range should be in the kind network in order for the application to work properly.', # noqa
               required=False)
 @click.option('--version',
               help='Version of metallb from bitnami. Default version is 4.6.0',
@@ -131,7 +130,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
         logger.info('Metallb is already installed, exiting...')
         logger.debug(metallb_exists.stdout.decode('utf-8'))
         raise click.Abort()
-    except s.CalledProcessError as error:
+    except s.CalledProcessError:
         logger.info('Metallb not found. Installing...')
         pass
     try:
@@ -140,13 +139,13 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
                                   'add',
                                   'bitnami',
                                   'https://charts.bitnami.com/bitnami'],
-                                   capture_output=True, check=True)
+                                 capture_output=True, check=True)
         logger.info('Downloading metallb version ...')
         logger.debug(metallb_repo_add.stdout.decode('utf-8'))
         metallb_repo_add = s.run(['helm',
                                   'repo',
                                   'update'],
-                                capture_output=True, check=True)
+                                 capture_output=True, check=True)
         logger.info('Repo update ...')
         logger.debug(metallb_repo_add.stdout.decode('utf-8'))
 
@@ -185,33 +184,35 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
         try:
             start_ip = ipaddress.IPv4Address(ip_range[0])
             end_ip = ipaddress.IPv4Address(ip_range[1])
-        except:
+        except Exception:
             logger.error('Incorrect IP address range: ' + ip_addresspool)
 
-        if start_ip not in ipaddress.IPv4Network(kind_subnet) or end_ip not in ipaddress.IPv4Network(kind_subnet):
-            logger.error('Provided IP address range not in kind network. Kind subnet is: ' + kind_subnet)
+        if start_ip not in ipaddress.IPv4Network(kind_subnet) or end_ip not in ipaddress.IPv4Network(kind_subnet): # noqa
+            logger.error('Provided IP address range not in kind network.')
+            logger.error('Kind subnet is: ' + kind_subnet)
             raise click.Abort()
 
-    # Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing.
+    # Check if version is 3.x.x and then use config map to install, else if version 4.x.x use CDR file for installing. # noqa
     # And dynamically set the IP Address range in the compatible .yaml file
     if version.split('.')[0] == '3':
         yaml_file_path = 'enabler/metallb-configmap.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
         modified_string = config['data']['config'][:-32]+ip_addresspool+"\n"
-        config['data']['config'] = modified_string 
+        config['data']['config'] = modified_string
 
-        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
-        updated_yaml = yaml.dump(config, default_flow_style=False)        
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool) # noqa
+        updated_yaml = yaml.dump(config, default_flow_style=False)
         with open(yaml_file_path, 'w') as yaml_file:
             yaml_file.write(updated_yaml)
 
     elif int(version.split('.')[0]) >= 4:
-        yaml_file_path = 'enabler/metallb-crd.yaml'
+        enabler_path = get_enabler_path()
+        yaml_file_path = os.path.join(enabler_path, 'metallb-crd.yaml')
         with open(yaml_file_path, 'r') as yaml_file:
             config = list(yaml.safe_load_all(yaml_file))
 
-        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool)
+        logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool) # noqa
         for doc in config:
             if 'kind' in doc and doc['kind'] == 'IPAddressPool':
                 doc['spec']['addresses'] = [ip_addresspool]
@@ -219,7 +220,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
         with open(yaml_file_path, 'w') as yaml_file:
             yaml.dump_all(config, yaml_file, default_flow_style=False)
     else:
-        logger.info('Incompatible format for Metallb version. Please check official versions ')
+        logger.info('Incompatible format for Metallb version. Please check official versions ') # noqa
     ns_exists = s.run(['kubectl',
                        'get',
                        'ns',
@@ -229,7 +230,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
                       capture_output=True)
     if ns_exists.returncode != 0:
         try:
-            metallb_ns = s.run(['kubectl',
+            metallb_ns = s.run(['kubectl',  # noqa
                                 'create',
                                 'ns',
                                 'metallb',
@@ -249,22 +250,21 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
         helm_metallb = s.run(['helm',
                               'install',
                               'metallb',
-                               '--kube-context',
+                              '--kube-context',
                               'kind-' + kube_context,
                               '--version',
                               version,
-                              'bitnami/metallb',                            
+                              'bitnami/metallb',
                               '-n',
                               'metallb',
                               '--wait'],
                              capture_output=True, check=True)
-        
-        # Apply configuration from CRD file  
-        config_metallb = s.run(['kubectl',
-                        'apply',
-                        '-f',
-                        yaml_file_path],
-                        capture_output=True, check=True)
+
+        # Apply configuration from CRD file
+        config_metallb = s.run(['kubectl',  # noqa
+                                'apply',
+                                '-f',
+                                yaml_file_path], capture_output=True, check=True) # noqa
 
         logger.info('✓ Metallb installed on cluster.')
         logger.debug(helm_metallb.stdout.decode("utf-8"))
@@ -308,11 +308,11 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
     logger.info('Installing istio, please wait...')
     with click_spinner.spinner():
         istio_command = ['istioctl',
-                        'manifest',
-                        'apply',
-                        '-y',
-                        '--set',
-                        'profile=default']
+                         'manifest',
+                         'apply',
+                         '-y',
+                         '--set',
+                         'profile=default']
         if monitoring_tools == 'monitoring-tools':
             monitoring_config = ['--set',
                                    'addonComponents.grafana.enabled=true',
@@ -326,8 +326,8 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
                                    'values.kiali.dashboard.jaegerURL=http://jaeger-query:16686',  # noqa
                                    '--set',
                                    'values.kiali.dashboard.grafanaURL=http://grafana:3000']  # noqa
-        
-        istio_command.extend(monitoring_config)            
+
+        istio_command.extend(monitoring_config)
         istio_command.append('--context')
         istio_command.append('kind-' + kube_context)
         istio_command.append('--wait')
@@ -342,9 +342,8 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
             raise click.Abort()
         if monitoring_tools == 'monitoring-tools':
             try:
-                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'enabler/grafana-vs.yaml'],
+                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'enabler/grafana-vs.yaml'], # noqa
                                   capture_output=True, check=True)
             except Exception as e:
                 logger.error('Error setting grafana URL')
                 logger.error(str(e))
-        

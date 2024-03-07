@@ -10,7 +10,6 @@ import click_spinner
 import git
 import os
 import subprocess as s
-import pkg_resources
 
 
 # App group of commands
@@ -44,11 +43,11 @@ def init(ctx,  kube_context_cli, submodules, repopath):
     with click_spinner.spinner():
         for submodule in submodules:
             try:
-                smodule=repo.submodule(submodule)
+                smodule = repo.submodule(submodule)
                 smodule.update()
                 logger.info('Fetching latest changes for {}'.format(submodule))
             except Exception as e:
-                logger.error(f'An error occurred while updating {submodule}: {e}'.format(submodule,e))
+                logger.error(f'An error occurred while updating {submodule}: {e}' .format(submodule,e)) # noqa
 
     logger.info('Platform initialized.')
 
@@ -80,7 +79,7 @@ def info(ctx,  kube_context_cli, kube_context):
                        capture_output=True, check=True)
         logger.info('Platform can be accessed through the URL:')
         logger.info(u'\u2023' + ' http://' + gw_url.stdout.decode('utf-8'))
-        kube_info=s.run(['kubectl', 'cluster-info'],capture_output=True, check=True)
+        kube_info = s.run(['kubectl', 'cluster-info'], capture_output=True, check=True) # noqa
         logger.info(kube_info.stdout.decode('utf-8'))
     except s.CalledProcessError as error:
         logger.error(error.stderr.decode('utf-8'))
@@ -162,6 +161,8 @@ def release(ctx,  kube_context_cli, version, submodules, repopath):
     # TODO: Tag platform and all submodules at their respective SHAs
     pass
     # TODO: beautify output, check if remotes are ahead, warn anti-patern
+
+
 @cli.command('version', short_help='Get all versions of components')
 @click.argument('submodules',
                 required=True,
@@ -182,7 +183,7 @@ def version(ctx, kube_context_cli, submodules, repopath):
         repo = get_repo(repopath)
         submodules = get_submodules(repo, submodules)
     except Exception as e:
-        logger.error(f'An error occurred while getting {submodule}: {e}'.format(submodule,e))
+        logger.error(f'An error occurred while getting {submodule}: {e}'.format(submodule, e)) # noqa
 
     # Do something with the submodules
     all_sm_details = []
@@ -217,8 +218,8 @@ def version(ctx, kube_context_cli, submodules, repopath):
                 sm_details['commits_behind'] = sum(1 for c in commits_behind)
             except TypeError as error:
                 if smrepo.head.is_detached:
-                    commit=smrepo.head.commit.hexsha
-                    sm_details['branch'] ='HEAD detached at '+str(commit)
+                    commit = smrepo.head.commit.hexsha
+                    sm_details['branch'] = 'HEAD detached at ' + str(commit)
                 else:
                     logger.error(error)
 
@@ -233,7 +234,6 @@ def version(ctx, kube_context_cli, submodules, repopath):
             # Add submodule details to the list
             all_sm_details.append(sm_details)
 
-
     for sm_details in all_sm_details:
         logger.info(sm_details['repo'] + ':')
         if 'branch' in sm_details:
@@ -242,8 +242,7 @@ def version(ctx, kube_context_cli, submodules, repopath):
         if 'tag' in sm_details:
             logger.info(u'\u2023' + ' Tag: ' + str(sm_details['tag']))
         if 'commits_ahead' in sm_details and sm_details['commits_ahead'] > 0:
-                logger.info(u'\u2023' + ' Ahead by: ' +
-                            str(sm_details['commits_ahead']) + ' commits')
+                logger.info(u'\u2023' + ' Ahead by: ' + str(sm_details['commits_ahead']) + ' commits') # noqa
+
         if 'commits_behind' in sm_details and sm_details['commits_behind'] > 0:
-                logger.info(u'\u2023' + ' Behind by: ' +
-                            str(sm_details['commits_behind']) + ' commits')
+                logger.info(u'\u2023' + ' Behind by: ' + str(sm_details['commits_behind']) + ' commits') # noqa
