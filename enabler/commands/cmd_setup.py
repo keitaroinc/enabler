@@ -10,11 +10,7 @@ import os
 import stat
 import tarfile
 import yaml
-
-
-def get_enabler_path():
-    enabler_path = os.getcwd()
-    return enabler_path
+import shutil
 
 
 # Setup group of commands
@@ -38,21 +34,31 @@ def init(ctx, kube_context_cli):
     # Figure out what kind of OS are we on
     ostype = os.uname().sysname.lower()
 
-    # URLs for dependencies
-    kubectl_url = 'https://storage.googleapis.com/kubernetes-release/release/v1.17.3/bin/{}/amd64/kubectl'.format(ostype)  # noqa
-    helm_url = 'https://get.helm.sh/helm-v3.1.2-{}-amd64.tar.gz'.format(ostype)
-    istioctl_url = 'https://github.com/istio/istio/releases/download/1.5.1/istioctl-1.5.1-{}.tar.gz'.format(ostype)  # noqa
-    kind_url = 'https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-{}-amd64'.format(ostype)  # noqa
-    skaffold_url = 'https://storage.googleapis.com/skaffold/releases/latest/skaffold-{}-amd64'.format(ostype)  # noqa
+    # Load URLs from the JSON file
+    enabler_path = get_path()
+    file_path = os.path.join(enabler_path, 'enabler/urls.yaml')
+    with open(file_path, 'r') as f:
+        urls = yaml.safe_load(f)
+
+    # Use the URLs
+    kubectl_url = urls["kubectl"].format(ostype)
+    helm_url = urls["helm"].format(ostype)
+    istioctl_url = urls["istioctl"].format(ostype)
+    kind_url = urls["kind"].format(ostype)
+    skaffold_url = urls["skaffold"].format(ostype)
 
     with click_spinner.spinner():
         # Download kubectl and make executable
-        logger.info('kubectl not found. Attempting to download...')
-        logger.info('Downloading kubectl...')
-        urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
-        st = os.stat('bin/kubectl')
-        os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
-        logger.info('kubectl downloaded!')
+        kubectl_location = shutil.which('kubectl')
+        if kubectl_location:
+            logger.info(f'kubectl found at: {kubectl_location}')
+        else:
+            logger.info('kubectl not found. Attempting to download...')
+            logger.info('Downloading kubectl...')
+            urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
+            st = os.stat('bin/kubectl')
+            os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
+            logger.info('kubectl downloaded!')
 
         # Download helm
         logger.info('Downloading helm...')
@@ -208,10 +214,10 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
             yaml_file.write(updated_yaml)
 
     elif int(version.split('.')[0]) >= 4:
-        enabler_path = get_enabler_path()
-        yaml_file_path = os.path.join(enabler_path, 'metallb-crd.yaml')
+        yaml_file_path = 'enabler/metallb-crd.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             config = list(yaml.safe_load_all(yaml_file))
+
 
         logger.info('Metallb will be configured in Layer 2 mode with the range: ' + ip_addresspool) # noqa
         for doc in config:
@@ -348,3 +354,10 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
             except Exception as e:
                 logger.error('Error setting grafana URL')
                 logger.error(str(e))
+
+
+def get_path():
+    enabler_path = os.getcwd()
+    logger.info("------")
+    logger.info(enabler_path)
+    return enabler_path
