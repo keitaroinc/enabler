@@ -36,7 +36,7 @@ def init(ctx, kube_context_cli):
 
     # Load URLs from the JSON file
     enabler_path = get_path()
-    file_path = os.path.join(enabler_path, 'enabler/urls.yaml')
+    file_path = os.path.join(enabler_path, 'enabler/dependencies.yaml')
     with open(file_path, 'r') as f:
         urls = yaml.safe_load(f)
 
