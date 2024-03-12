@@ -47,6 +47,9 @@ def init(ctx, kube_context_cli):
     kind_url = urls["kind"].format(ostype)
     skaffold_url = urls["skaffold"].format(ostype)
 
+    # Check if bin folder exists
+    check_bin_folder()
+
     with click_spinner.spinner():
         # Download kubectl and make executable
         kubectl_location = shutil.which('kubectl')
@@ -214,7 +217,7 @@ def metallb(ctx, kube_context_cli, kube_context, ip_addresspool, version):
             yaml_file.write(updated_yaml)
 
     elif int(version.split('.')[0]) >= 4:
-        yaml_file_path = 'enabler/metallb-crd.yaml'
+        yaml_file_path = 'metallb-crd.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             config = list(yaml.safe_load_all(yaml_file))
 
@@ -358,6 +361,15 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
 
 def get_path():
     enabler_path = os.getcwd()
-    logger.info("------")
-    logger.info(enabler_path)
     return enabler_path
+
+
+def check_bin_folder():
+    enabler_path = os.getcwd()
+    full_path = enabler_path + '/bin'
+    if not os.path.exists(full_path):
+        logger.info("Creating bin folder...")
+        os.makedirs(full_path)
+    else:
+        logger.info("Bin folder already exists. Continue...")
+        pass
