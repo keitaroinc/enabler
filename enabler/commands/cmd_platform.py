@@ -62,6 +62,8 @@ def info(ctx,  kube_context_cli, kube_context):
     """Get info on platform and platform components"""
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
+        logger.info("kube_context")
+        logger.info(kube_context)
     if ctx.kube_context is None and kube_context is None:
         logger.error("--kube-context was not specified")
         raise click.Abort()
@@ -73,7 +75,6 @@ def info(ctx,  kube_context_cli, kube_context):
                         'istio-system',
                         'get',
                         'service',
-                        'istio-ingressgateway',
                         '-o',
                         'jsonpath={.status.loadBalancer.ingress[0].ip}'],
                        capture_output=True, check=True)
@@ -99,6 +100,9 @@ def keys(ctx,  kube_context_cli, bits):
     keys_dir = 'infrastructure/keys/'
     private_key_filename = 'key.pem'
     public_key_filename = 'key.pub'
+
+    # Create keys directory if it doesn't exist
+    os.makedirs(keys_dir, exist_ok=True)
 
     # Check if the keys exist and warn user
     if (
@@ -134,6 +138,7 @@ def keys(ctx,  kube_context_cli, bits):
     f = open(keys_dir + public_key_filename, 'wb')
     f.write(public_key)
     f.close()
+    logger.info('Keys generated successfully.')
 
 
 @cli.command('release', short_help='Make a platform release')
