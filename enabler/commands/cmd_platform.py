@@ -140,6 +140,7 @@ def keys(ctx,  kube_context_cli, bits):
     f = open(keys_dir + public_key_filename, 'wb')
     f.write(public_key)
     f.close()
+    logger.info('Keys generated successfully.')
 
 
 @cli.command('release', short_help='Make a platform release')
