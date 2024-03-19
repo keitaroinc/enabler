@@ -62,8 +62,6 @@ def info(ctx,  kube_context_cli, kube_context):
     """Get info on platform and platform components"""
     if ctx.kube_context is not None:
         kube_context = ctx.kube_context
-        logger.info("kube_context")
-        logger.info(kube_context)
     if ctx.kube_context is None and kube_context is None:
         logger.error("--kube-context was not specified")
         raise click.Abort()
@@ -75,6 +73,7 @@ def info(ctx,  kube_context_cli, kube_context):
                         'istio-system',
                         'get',
                         'service',
+                        'istio-ingressgateway',
                         '-o',
                         'jsonpath={.status.loadBalancer.ingress[0].ip}'],
                        capture_output=True, check=True)

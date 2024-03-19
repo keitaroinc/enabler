@@ -99,11 +99,10 @@ def delete(ctx, kube_context_cli, kube_context):
               required=False)
 @click.pass_context
 @pass_environment
-def status(ctx, kube_context):
+def status(ctx):
     """Check the status of the kind cluster"""
+    kube_context = ctx.kube_context
     # Check if the cluster exists
-    if ctx.kube_context is not None:
-        kube_context = ctx.kube_context
     if kind.kind_get(kube_context):
         if kube.kubectl_info(kube_context):
             logger.info('Kind cluster \'' + kube_context + '\' is running')
