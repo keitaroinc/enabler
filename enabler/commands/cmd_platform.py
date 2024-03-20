@@ -100,6 +100,12 @@ def keys(ctx,  kube_context_cli, bits):
     private_key_filename = 'key.pem'
     public_key_filename = 'key.pub'
 
+    # Check if keys directory exists
+    if not os.path.exists(keys_dir):
+        logger.info("Creating key directory...")
+        os.makedirs(keys_dir)
+    logger.info("Keys directory already exists")
+
     # Check if the keys exist and warn user
     if (
         os.path.isfile(keys_dir + private_key_filename) or
@@ -134,6 +140,7 @@ def keys(ctx,  kube_context_cli, bits):
     f = open(keys_dir + public_key_filename, 'wb')
     f.write(public_key)
     f.close()
+    logger.info('Keys generated successfully.')
 
 
 @cli.command('release', short_help='Make a platform release')
