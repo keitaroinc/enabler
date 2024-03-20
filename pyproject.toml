@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "Enabler"
+version = "0.1"
+description = "Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices." # noqa
+
+[tool.poetry.dependencies]
+python = "^3.7" # noqa
+requests = "^2.31.0" # noqa
+flask = "^3.0.2" # noqa
+flask-sqlalchemy = "^3.1.0" # noqa
+click = "^7.1.1" # noqa
+click-log = "^0.3.2" # noqa 
+click-spinner = "^0.1.8" # noqa
+cryptography = "^42.0.5" # noqa
+docker = "^4.2.0" # noqa
+docker-compose = "^1.29.2" # noqa
+docker-py = "^1.10.6" # noqa
+docker-pycreds = "^0.4.0" # noqa
+dockerpty = "^0.4.1" # noqa
+flake8 = "^7.0.0" # noqa
+itsdangerous = "^2.1.2" # noqa
+gitpython = "^3.1.37" # noqa
+markupsafe = "^2.1.5" # noqa
+paramiko = "^3.4.0" # noqa
+pycparser = "^2.21" # noqa
+semver = "^3.0.2" # noqa
+setuptools = "^44.1.0" # noqa
+smmap = "^5.0.1" # noqa
+sqlalchemy = "^2.0.16" # noqa
+werkzeug = "^3.0.1" # noqa
+
+[build-system]
+requires = ["backports.ssl-match-hostname>=3.5", "ipaddress>=1.0.16", "cffi>=1.16.0", "chardet>=4.0.0", "charset-normalizer>=3.3.2", "pip", "setuptools"] # noqa
+build-backend = "poetry.core.masonry.api" # noqa
