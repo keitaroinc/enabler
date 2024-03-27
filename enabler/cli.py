@@ -1,8 +1,20 @@
 import os
 import logging
-
 import click
 import click_log
+import subprocess
+
+
+class CLI:
+    def __init__(self, runner):
+        self.runner = runner
+
+    def version_command(self):
+        try:
+            result = subprocess.run(['enabler', 'version'], capture_output=True, text=True, check=True) # noqa
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to get version: {e}")
 
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="ENABLER")
