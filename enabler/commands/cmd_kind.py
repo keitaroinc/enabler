@@ -98,20 +98,19 @@ def delete(ctx, kube_context_cli, kube_context):
               help='The kubernetes context to use',
               required=False)
 @click.pass_context
-@pass_environment
 def status(ctx, kube_context):
     """Check the status of the kind cluster"""
-    # Check if the cluster exists
-    if ctx.kube_context is not None:
-        kube_context = ctx.kube_context
-    if kind.kind_get(kube_context):
-        if kube.kubectl_info(kube_context):
-            logger.info('Kind cluster \'' + kube_context + '\' is running')
+    if kube_context is not None:
+        if kind.kind_get(kube_context):
+            if kube.kubectl_info(kube_context):
+                logger.info('Kind cluster \'' + kube_context + '\' is running')
+            else:
+                logger.error('Cluster not running. Please start the cluster')
+                raise click.Abort()
         else:
-            logger.error('Cluster not running. Please start the cluster')
-            raise click.Abort()
+            logger.error('Kind cluster \'' + kube_context + '\' does not exist.') # noqa
     else:
-        logger.error('Kind cluster \'' + kube_context + '\' does not exist.')
+        logger.error('No kube-context provided.')
 
 
 @cli.command('start', short_help='Start cluster')
@@ -211,18 +210,17 @@ def stop(ctx, kube_context_cli, kube_context):
     if kind.kind_get(kube_context):
         # Check and stop kind cluster docker containers
         client = docker.from_env()
-        kind_containers = client.containers.list(
-                        all, filters={'label': 'io.x-k8s.kind.cluster'})
+        kind_containers = client.containers()
         with click_spinner.spinner():
-            for container in kind_containers:
-                if kind_cp in container.name or kind_workers in container.name:
-                    if container.status == 'running':
-                        container.stop()
-                        logger.debug('Container ' + container.name
-                                     + ' stopped')
+            for container_info in kind_containers:
+                container_name = container_info['Names'][0]
+                if container_name and (kind_cp in container_name or kind_workers in container_name): # noqa
+                    container_state = container_info['State'][0]
+                    if container_state == 'running':
+                        container_info.stop()
+                        logger.debug('Container ' + container_name + ' stopped') # noqa
                     else:
-                        logger.debug('Container ' + container.name +
-                                     ' is already stopped')
+                        logger.debug('Container ' + container_name + ' is already stopped') # noqa
         logger.info('Kind cluster ' + kube_context + ' was stopped.')
     else:
         logger.error('Kind cluster \'' + kube_context + '\' does not exist.')
