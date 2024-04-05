@@ -1,31 +1,28 @@
 from enabler.cli import logger
 import click
 import git
+import os
 
 
 def get_repo(repopath):
+    """Function to get the repository."""
+    if not os.path.exists(repopath):
+        logger.critical('The repo path ' + repopath + ' does not exist')
+        raise click.Abort()
+
     try:
-        return git.Repo(repopath, odbt=git.GitDB)
+        return git.Repo(repopath, odbt=git.GitDB, search_parent_directories=True) # noqa
     except git.InvalidGitRepositoryError:
         logger.critical('The repo path ' + repopath + ' is not a git repo')
         raise click.Abort()
 
 
 def get_submodules(repo, submodules):
-    # Based on provided submodules through arguments set the repo objects
-    # that we want to work with
+    """Function to get submodules."""
     if submodules == 'all':
-        submodules = repo.submodules
-        submodule_list = []
-        for submodule in submodules:
-            submodule_list.append(submodule.name)
-        submodules = submodule_list
+        submodules = [submodule.name for submodule in repo.submodules]
     else:
         submodules = submodules.split(',')
-        submodule_list = []
-        for submodule in submodules:
-            submodule_list.append('platform/' + submodule)
-        submodules = submodule_list
     logger.debug('The provided submodules are:')
     logger.debug(submodules)
-    return (submodules)
+    return submodules
