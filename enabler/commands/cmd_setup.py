@@ -10,7 +10,6 @@ import os
 import stat
 import tarfile
 import yaml
-import shutil
 
 
 # Setup group of commands
@@ -31,6 +30,9 @@ def cli(ctx, kube_context_cli):
 def init(ctx, kube_context_cli):
     """Download binaries for all dependencies"""
 
+    # Check if bin folder exists
+    check_bin_folder()
+
     # Figure out what kind of OS are we on
     ostype = os.uname().sysname.lower()
 
@@ -47,62 +49,68 @@ def init(ctx, kube_context_cli):
     kind_url = urls["kind"].format(ostype)
     skaffold_url = urls["skaffold"].format(ostype)
 
-    # Check if bin folder exists
-    check_bin_folder()
-
     with click_spinner.spinner():
-        # Download kubectl and make executable
-        kubectl_location = shutil.which('kubectl')
-        if kubectl_location:
-            logger.info(f'kubectl found at: {kubectl_location}')
+        # Download kubectl if not exists
+        kubectl_location = 'bin/kubectl'
+        if os.path.exists(kubectl_location):
+            logger.info(f'kubectl already exists at: {kubectl_location}')
         else:
-            logger.info('kubectl not found. Attempting to download...')
             logger.info('Downloading kubectl...')
-            urllib.request.urlretrieve(kubectl_url, 'bin/kubectl')
-            st = os.stat('bin/kubectl')
-            os.chmod('bin/kubectl', st.st_mode | stat.S_IEXEC)
+            urllib.request.urlretrieve(kubectl_url, kubectl_location)
+            st = os.stat(kubectl_location)
+            os.chmod(kubectl_location, st.st_mode | stat.S_IEXEC)
             logger.info('kubectl downloaded!')
 
-        # Download helm
-        logger.info('Downloading helm...')
-        urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
-        tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
-        for member in tar.getmembers():
-            if member.isreg():
-                member.name = os.path.basename(member.name)
-                tar.extract('helm', 'bin')
-        tar.close()
-        os.remove('bin/helm.tar.gz')
-        logger.info('helm downloaded!')
+        # Download helm and make executable
+        helm_location = 'bin/helm'
+        if os.path.exists(helm_location):
+            logger.info(f'helm already exists at: {helm_location}')
+        else:
+            logger.info('Downloading helm...')
+            urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
+            tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
+            for member in tar.getmembers():
+                if member.isreg():
+                    member.name = os.path.basename(member.name)
+                    tar.extract('helm', 'bin')
+            tar.close()
+            os.remove('bin/helm.tar.gz')
+            logger.info('helm downloaded!')
 
-        # Download istioctl
-        logger.info('Downloading istioctl...')
-        urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
-        tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
-        tar.extract('istioctl', 'bin')
-        tar.close()
-        os.remove('bin/istioctl.tar.gz')
-        logger.info('istioctl downloaded!')
+        # Download istioctl and make executable
+        istioctl_location = 'bin/istioctl'
+        if os.path.exists(istioctl_location):
+            logger.info(f'istioctl already exists at: {istioctl_location}')
+        else:
+            logger.info('Downloading istioctl...')
+            urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
+            tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
+            tar.extract('istioctl', 'bin')
+            tar.close()
+            os.remove('bin/istioctl.tar.gz')
+            logger.info('istioctl downloaded!')
 
         # Download kind and make executable
-        logger.info('Downloading kind...')
-        urllib.request.urlretrieve(kind_url, 'bin/kind')
-        st = os.stat('bin/kind')
-        os.chmod('bin/kind', st.st_mode | stat.S_IEXEC)
-        logger.info('kind downloaded!')
+        kind_location = 'bin/kind'
+        if os.path.exists(kind_location):
+            logger.info(f'kind already exists at: {kind_location}')
+        else:
+            logger.info('Downloading kind...')
+            urllib.request.urlretrieve(kind_url, 'bin/kind')
+            st = os.stat('bin/kind')
+            os.chmod('bin/kind', st.st_mode | stat.S_IEXEC)
+            logger.info('kind downloaded!')
 
         # Download skaffold and make executable
-        logger.info('Downloading skaffold...')
-        urllib.request.urlretrieve(skaffold_url, 'bin/skaffold')
-        st = os.stat('bin/skaffold')
-        os.chmod('bin/skaffold', st.st_mode | stat.S_IEXEC)
-        logger.info('skaffold downloaded!\n')
-
-    logger.info('All dependencies downloaded to bin/')
-    logger.info('IMPORTANT: Please add the path to your user profile to ' +
-                os.getcwd() + '/bin directory at the beginning of your PATH')
-    logger.info('$ echo export PATH=' + os.getcwd() + '/bin:$PATH >> ~/.profile')  # noqa
-    logger.info('$ source ~/.profile')
+        skaffold_location = 'bin/skaffold'
+        if os.path.exists(skaffold_location):
+            logger.info(f'skaffold already exists at: {skaffold_location}')
+        else:
+            logger.info('Downloading skaffold...')
+            urllib.request.urlretrieve(skaffold_url, 'bin/skaffold')
+            st = os.stat('bin/skaffold')
+            os.chmod('bin/skaffold', st.st_mode | stat.S_IEXEC)
+            logger.info('skaffold downloaded!\n')
 
 
 # Metallb setup
