@@ -144,28 +144,26 @@ def keys(ctx,  kube_context_cli, bits):
 
 
 @cli.command('release', short_help='Make a platform release')
-@click.argument('version',
-                type=semver.BasedVersionParamType(),
-                required=True)
-@click.argument('submodule',
-                required=True)
-@click.argument('repopath',
-                required=True,
-                type=click.Path(exists=True),
-                default=os.getcwd())
+@click.argument('version', type=semver.BasedVersionParamType(), required=True)
+@click.argument('submodule_path', required=True, type=click.Path(exists=True))
 @click.pass_context
 @pass_environment
-def release(ctx, kube_context_cli, version, submodule, repopath):
+def release(ctx, kube_context_cli, version, submodule_path):
     """Release platform by tagging platform repo and
-    tagging all individual components (git submodules)
-    using their respective SHA that the submodules point at"""
+    tagging the individual component (git submodule)
+    using its respective SHA that the submodule points at"""
+    submodule_name = os.path.basename(submodule_path)
 
-    # Get the repo from arguments defaults to cwd
-    repo = get_repo(repopath)
+    # Get the repository
+    repo = get_repo(os.getcwd())
+    if not repo:
+        click.echo("Repository not found.")
+        return
 
     # Check if submodule exists in the repository
-    if submodule not in repo.submodules:
-        click.echo(f"Submodule '{submodule}' not found in the repository.")
+    submodule = next((s for s in repo.submodules if s.name.endswith(submodule_name)), None) # noqa
+    if not submodule:
+        click.echo(f"Submodule '{submodule_name}' not found in the repository.") # noqa
         return
 
     # Tag platform at provided version
@@ -173,19 +171,19 @@ def release(ctx, kube_context_cli, version, submodule, repopath):
     tag_result = tag_repo(repo, platform_tag_name)
 
     if tag_result:
-        click.echo(f"Platform tagged with version {platform_tag_name}")
+        click.echo(f"Platform version: {platform_tag_name}")
     else:
         click.echo("Failed to tag platform")
 
-    submodule_path = os.path.join(repo.working_dir, submodule)
+    submodule_path = os.path.join(repo.working_dir, submodule_path)
     submodule_repo = git.Repo(submodule_path)
     submodule_sha = submodule_repo.head.commit.hexsha
-    submodule_tag_name = f"{submodule}-{platform_tag_name}"
+    submodule_tag_name = f"{submodule_name}-{platform_tag_name}"
     tag_result = tag_repo(submodule_repo, submodule_tag_name, submodule_sha)
     if tag_result:
-        click.echo(f"{submodule} tagged with version {platform_tag_name}")
+        click.echo(f"{submodule_name} version: {platform_tag_name}")
     else:
-        click.echo(f"Failed to tag {submodule} at {submodule_sha}")
+        click.echo(f"Failed to tag {submodule_name} at {submodule_sha}")
 
 
 def tag_repo(repo, tag_name, commit_sha=None):

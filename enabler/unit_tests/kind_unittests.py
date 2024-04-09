@@ -16,9 +16,9 @@ class TestKindCommands(unittest.TestCase):
 
     @patch('enabler.commands.cmd_kind.s')
     def test_delete_command(self, mock_s):
-        mock_s.run.return_value.returncode = 0
+        mock_s.run.return_value.returncode = 1
         result = self.runner.invoke(CLI, ['delete'])
-        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.exit_code, 1)
 
     @patch('enabler.commands.cmd_kind.s')
     def test_status_command(self, mock_s):
