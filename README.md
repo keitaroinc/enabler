@@ -84,8 +84,14 @@ The commands in this group can be accessed using the prefix enabler platform + n
   ```
 
 - **keys**: Generate encryption keys used by the application services
-- **release**: Release platform by tagging platform repo and tagging all individual components (git submodules) using their respective SHA that the submodules point at
 - **version**: Check versions of microservices in git submodules you can provide a comma separated list of submodules or you can use 'all' for all submodules
+- **release**: Release platform by tagging platform repo and tagging all individual components (git submodules) using their respective SHA that the submodules point at
+
+
+  ```bash
+  enabler platform release <version> <submodule_name>
+  ```
+
 
 ### preflight
 
@@ -115,7 +121,7 @@ enabler kind name_of_command --kube-context keitaro
 
 These commands are used to setup the infrastructure to run kubernetes. With this group we can download the necessary packages and install them. To run commands from this group we use enabler setup + name_of_command.
 
-- **init**: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold
+- **init**: download binaries for all dependencies such as kubectl, helm, istioctl, kind and skaffold in /enabler/bin folder
 - **metallb**: install and setup metallb on k8s
   This command has a --kube-context option, which should be defined as the name of the kind cluster and can be executed with this command in Terminal:
 

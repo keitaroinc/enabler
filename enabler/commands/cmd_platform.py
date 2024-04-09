@@ -144,30 +144,60 @@ def keys(ctx,  kube_context_cli, bits):
 
 
 @cli.command('release', short_help='Make a platform release')
-@click.argument('version',
-                type=semver.BasedVersionParamType(),
-                required=True)
-@click.argument('submodules',
-                required=True,
-                default='all')
-@click.argument('repopath',
-                required=True,
-                type=click.Path(exists=True),
-                default=os.getcwd())
+@click.argument('version', type=semver.BasedVersionParamType(), required=True)
+@click.argument('submodule_path', required=True, type=click.Path(exists=True))
 @click.pass_context
 @pass_environment
-def release(ctx,  kube_context_cli, version, submodules, repopath):
+def release(ctx, kube_context_cli, version, submodule_path):
     """Release platform by tagging platform repo and
-    tagging all individual components (git submodules)
-    using their respective SHA that the submodules point at"""
+    tagging the individual component (git submodule)
+    using its respective SHA that the submodule points at"""
+    submodule_name = os.path.basename(submodule_path)
 
-    # Get the repo from arguments defaults to cwd
-    repo = get_repo(repopath)
-    submodules = get_submodules(repo, submodules)
+    # Get the repository
+    repo = get_repo(os.getcwd())
+    if not repo:
+        click.echo("Repository not found.")
+        return
 
-    # TODO: Tag platform and all submodules at their respective SHAs
-    pass
-    # TODO: beautify output, check if remotes are ahead, warn anti-patern
+    # Check if submodule exists in the repository
+    submodule = next((s for s in repo.submodules if s.name.endswith(submodule_name)), None) # noqa
+    if not submodule:
+        click.echo(f"Submodule '{submodule_name}' not found in the repository.") # noqa
+        return
+
+    # Tag platform at provided version
+    platform_tag_name = f"v{version}"
+    tag_result = tag_repo(repo, platform_tag_name)
+
+    if tag_result:
+        click.echo(f"Platform version: {platform_tag_name}")
+    else:
+        click.echo("Failed to tag platform")
+
+    submodule_path = os.path.join(repo.working_dir, submodule_path)
+    submodule_repo = git.Repo(submodule_path)
+    submodule_sha = submodule_repo.head.commit.hexsha
+    submodule_tag_name = f"{submodule_name}-{platform_tag_name}"
+    tag_result = tag_repo(submodule_repo, submodule_tag_name, submodule_sha)
+    if tag_result:
+        click.echo(f"{submodule_name} version: {platform_tag_name}")
+    else:
+        click.echo(f"Failed to tag {submodule_name} at {submodule_sha}")
+
+
+def tag_repo(repo, tag_name, commit_sha=None):
+    try:
+        if commit_sha:
+            repo.create_tag(tag_name, ref=commit_sha)
+        else:
+            repo.create_tag(tag_name)
+        return True
+    except git.GitCommandError as e:
+        if "already exists" in str(e):
+            return True  # Tag already exists
+        logger.error(f"Error tagging repository: {e}")
+        return False
 
 
 @cli.command('version', short_help='Get all versions of components')
@@ -182,74 +212,30 @@ def release(ctx,  kube_context_cli, version, submodules, repopath):
 @pass_environment
 def version(ctx, kube_context_cli, submodules, repopath):
     """Check versions of microservices in git submodules
-        You can provide a comma separated list of submodules
+        You can provide a comma-separated list of submodules
         or you can use 'all' for all submodules"""
 
     # Get the repo from arguments defaults to cwd
     try:
         repo = get_repo(repopath)
+        logger.info("REPO")
+        logger.info(repo)
         submodules = get_submodules(repo, submodules)
-    except Exception as e:
-        logger.error(f'An error occurred while getting {submodule}: {e}'.format(submodule, e)) # noqa
+    except Exception as e: # noqa
+        logger.info("An error occurred while getting submodule")
 
-    # Do something with the submodules
-    all_sm_details = []
-    with click_spinner.spinner():
-        for submodule in submodules:
-            logger.debug('Switched to submodule: ' + submodule)
-            sm_details = {}
-            sm_details['repo'] = submodule
-            # Are we on an active branch? on a tag? if not then get sha?
-            try:
-                smrepo = git.Repo(submodule)
-                sm_details['present'] = True
-            except git.InvalidGitRepositoryError as error:  # noqa
-                logger.warning(submodule + ': not present')
-                sm_details['present'] = False
-                all_sm_details.append(sm_details)
-                continue
+    version_info = []
+    # Retrieve version information for each submodule
+    for submodule in submodules:
+        submodule_path = os.path.join(repo.working_dir, submodule)
+        try:
+            smrepo = git.Repo(submodule_path)
+            tags = smrepo.tags
+            # Choose the latest tag as version
+            latest_tag = max(tags, key=lambda t: t.commit.committed_datetime)
+            version_info.append((submodule, latest_tag.name))
+        except Exception as e: # noqa
+            version_info.append((submodule, "Error retrieving version"))
 
-            # Get branch
-            try:
-                branch = smrepo.active_branch.name
-                sm_details['branch'] = branch
-
-                # Check if remotes are ahead or behind
-                origin = smrepo.remotes.origin
-                origin.fetch()
-                commits_behind = smrepo.iter_commits(branch +
-                                                     '..origin/' + branch)
-                commits_ahead = smrepo.iter_commits('origin/' + branch +
-                                                    '..' + branch)
-                sm_details['commits_ahead'] = sum(1 for c in commits_ahead)
-                sm_details['commits_behind'] = sum(1 for c in commits_behind)
-            except TypeError as error:
-                if smrepo.head.is_detached:
-                    commit = smrepo.head.commit.hexsha
-                    sm_details['branch'] = 'HEAD detached at ' + str(commit)
-                else:
-                    logger.error(error)
-
-            # Check if we point to any tags
-            points_at_tag = smrepo.git.tag('--points-at', 'HEAD')
-            sm_details['tag'] = points_at_tag
-
-            # Get sha of HEAD
-            sha = smrepo.head.commit.hexsha
-            sm_details['sha'] = sha
-
-            # Add submodule details to the list
-            all_sm_details.append(sm_details)
-
-    for sm_details in all_sm_details:
-        logger.info(sm_details['repo'] + ':')
-        if 'branch' in sm_details:
-            logger.info(u'\u2023' + ' Branch: ' + sm_details['branch'])
-        logger.info(u'\u2023' + ' SHA: ' + sm_details['sha'])
-        if 'tag' in sm_details:
-            logger.info(u'\u2023' + ' Tag: ' + str(sm_details['tag']))
-        if 'commits_ahead' in sm_details and sm_details['commits_ahead'] > 0:
-                logger.info(u'\u2023' + ' Ahead by: ' + str(sm_details['commits_ahead']) + ' commits') # noqa
-
-        if 'commits_behind' in sm_details and sm_details['commits_behind'] > 0:
-                logger.info(u'\u2023' + ' Behind by: ' + str(sm_details['commits_behind']) + ' commits') # noqa
+    for submodule, version in version_info:
+        logger.info(f"{submodule}: {version}")
