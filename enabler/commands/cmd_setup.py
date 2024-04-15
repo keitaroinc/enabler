@@ -91,6 +91,7 @@ def init(ctx, kube_context_cli):
         os.chmod('bin/skaffold', st.st_mode | stat.S_IEXEC)
         logger.info('skaffold downloaded!\n')
 
+
 # Metallb setup
 @cli.command('metallb', short_help='Setup metallb')
 @click.option('--kube-context',
