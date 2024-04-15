@@ -49,6 +49,15 @@ Commands:
   version    Get current version of Enabler
 ```
 
+Add the following line to your `~/.bashrc file`:
+```bash
+source /path/to/enabler_completion.sh
+```
+Then in terminal, run:
+```bash
+source ~/.bashrc
+```
+
 ## Commands
 
 The commands used are organized in several groups:
