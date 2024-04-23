@@ -10,6 +10,9 @@ import os
 import stat
 import tarfile
 import yaml
+import requests
+import semver
+import re
 
 
 # Setup group of commands
@@ -56,61 +59,112 @@ def init(ctx, kube_context_cli):
             logger.info(f'kubectl already exists at: {kubectl_location}')
         else:
             logger.info('Downloading kubectl...')
-            urllib.request.urlretrieve(kubectl_url, kubectl_location)
-            st = os.stat(kubectl_location)
-            os.chmod(kubectl_location, st.st_mode | stat.S_IEXEC)
-            logger.info('kubectl downloaded!')
+            download_and_make_executable(kubectl_url, kubectl_location)
 
-        # Download helm and make executable
+        # Download helm if not exists or update if necessary
         helm_location = 'bin/helm'
         if os.path.exists(helm_location):
             logger.info(f'helm already exists at: {helm_location}')
+            update_binary_if_necessary(helm_location, helm_url, ostype)
         else:
             logger.info('Downloading helm...')
-            urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
-            tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
-            for member in tar.getmembers():
-                if member.isreg():
-                    member.name = os.path.basename(member.name)
-                    tar.extract('helm', 'bin')
-            tar.close()
-            os.remove('bin/helm.tar.gz')
-            logger.info('helm downloaded!')
+            download_and_make_executable(helm_url, helm_location)
 
-        # Download istioctl and make executable
+        # Download istioctl if not exists or update if necessary
         istioctl_location = 'bin/istioctl'
         if os.path.exists(istioctl_location):
             logger.info(f'istioctl already exists at: {istioctl_location}')
+            update_binary_if_necessary(istioctl_location, istioctl_url, ostype)
         else:
             logger.info('Downloading istioctl...')
-            urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
-            tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
-            tar.extract('istioctl', 'bin')
-            tar.close()
-            os.remove('bin/istioctl.tar.gz')
-            logger.info('istioctl downloaded!')
+            download_and_make_executable(istioctl_url, istioctl_location)
 
-        # Download kind and make executable
+        # Download kind if not exists or update if necessary
         kind_location = 'bin/kind'
         if os.path.exists(kind_location):
             logger.info(f'kind already exists at: {kind_location}')
+            update_binary_if_necessary(kind_location, kind_url, ostype)
         else:
             logger.info('Downloading kind...')
-            urllib.request.urlretrieve(kind_url, 'bin/kind')
-            st = os.stat('bin/kind')
-            os.chmod('bin/kind', st.st_mode | stat.S_IEXEC)
-            logger.info('kind downloaded!')
+            download_and_make_executable(kind_url, kind_location)
 
-        # Download skaffold and make executable
+        # Download skaffold if not exists
         skaffold_location = 'bin/skaffold'
         if os.path.exists(skaffold_location):
             logger.info(f'skaffold already exists at: {skaffold_location}')
         else:
             logger.info('Downloading skaffold...')
-            urllib.request.urlretrieve(skaffold_url, 'bin/skaffold')
-            st = os.stat('bin/skaffold')
-            os.chmod('bin/skaffold', st.st_mode | stat.S_IEXEC)
-            logger.info('skaffold downloaded!\n')
+            download_and_make_executable(skaffold_url, skaffold_location)
+
+    logger.info('All dependencies downloaded to bin/')
+    logger.info('IMPORTANT: Please add the path to your user profile to ' +
+                os.getcwd() + '/bin directory at the beginning of your PATH')
+    logger.info('$ echo export PATH=' + os.getcwd() + '/bin:$PATH >> ~/.profile') # noqa
+    logger.info('$ source ~/.profile')
+
+
+def get_latest_version_from_github(repo_url, ostype):
+    try:
+        # Fetch the GitHub releases page
+        response = requests.get(repo_url)
+        response.raise_for_status()
+        latest_version = response.json()["tag_name"]
+        if latest_version:
+            return latest_version
+        else:
+            logger.error("Failed to find latest release tag")
+            return None
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching latest version from GitHub: {e}")
+        return None
+
+
+def get_current_version(binary_location, binary_name):
+    if os.path.exists(binary_location):
+        filename = os.path.basename(binary_location)
+        version = extract_version_from_filename(filename, binary_name)
+        return version
+    else:
+        logger.error(f"Binary {binary_name} not found at location: {binary_location}") # noqa
+        return None
+
+
+def extract_version_from_filename(filename, binary_name):
+    if binary_name in filename:
+        # Check if the filename contains the binary_name
+        if binary_name == "helm" or binary_name == "istioctl":
+            match = re.search(r'{}-v(\d+\.\d+\.\d+)'.format(binary_name), filename) # noqa
+            if match:
+                return match.group(1)
+        elif binary_name == "kind":
+            match = re.search(r'{}-(\d+\.\d+\.\d+)'.format(binary_name), filename) # noqa
+            if match:
+                return match.group(1)
+    return None
+
+
+def download_and_make_executable(url, destination):
+    urllib.request.urlretrieve(url, destination)
+    st = os.stat(destination)
+    os.chmod(destination, st.st_mode | stat.S_IEXEC)
+    logger.info(f'{os.path.basename(destination)} downloaded and made executable!') # noqa
+
+
+def update_binary_if_necessary(binary_location, binary_url, ostype):
+    current_version = get_current_version(binary_location, os.path.basename(binary_url)) # noqa
+    latest_version = get_latest_version_from_github(binary_url, ostype)
+    if latest_version is not None:
+        if semver.compare(current_version, latest_version) < 0:
+            logger.info(f"Updating {os.path.basename(binary_location)}...")
+            urllib.request.urlretrieve(binary_url, f'{binary_location}.tar.gz')
+            tar = tarfile.open(f'{binary_location}.tar.gz', 'r:gz')
+            for member in tar.getmembers():
+                if member.isreg():
+                    member.name = os.path.basename(member.name)
+                    tar.extract(member, os.path.dirname(binary_location))
+            tar.close()
+            os.remove(f'{binary_location}.tar.gz')
+            logger.info(f'{os.path.basename(binary_location)} updated!')
 
 
 # Metallb setup
