@@ -47,7 +47,7 @@ class EnablerCLI(click.MultiCommand):
     def get_command(self, ctx, name):
         try:
             mod = __import__(
-                "src.enabler_keitaro_inc.commands.cmd_{}".format(name), None, None, ["cli"]
+                "src.enabler_keitaro_inc.commands.cmd_{}".format(name), None, None, ["cli"] # noqa
             )
         except ImportError:
             return

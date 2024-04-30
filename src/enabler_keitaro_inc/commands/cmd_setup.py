@@ -116,8 +116,8 @@ def get_latest_version_from_github(repo_url, ostype):
         else:
             logger.error("Failed to find latest release tag")
             return None
-    except requests.exceptions.RequestException as e:
-        logger.info(f"Latest release not found")
+    except requests.exceptions.RequestException as e: # noqa
+        logger.info("Latest release not found")
         return None
 
 
