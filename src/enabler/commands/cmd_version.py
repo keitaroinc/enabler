@@ -1,4 +1,4 @@
-from  src.enabler.enabler import pass_environment, logger
+from src.enabler.enabler import pass_environment, logger
 import pkg_resources
 import click
 
