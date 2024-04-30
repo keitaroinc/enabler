@@ -1,14 +1,14 @@
 import unittest
 from click.testing import CliRunner
 from unittest.mock import patch
-from enabler.commands.cmd_preflight import cli as CLI
+from src.enabler_keitaro_inc.commands.cmd_preflight import cli as CLI
 
 
 class TestPreflightCommands(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
 
-    @patch('enabler.commands.cmd_preflight.s')
+    @patch('src.enabler_keitaro_inc.commands.cmd_preflight.s')
     def test_preflight_command(self, mock_s):
         mock_s.run.return_value.returncode = 0
         with self.runner.isolated_filesystem():

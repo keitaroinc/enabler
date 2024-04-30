@@ -1,6 +1,6 @@
-from src.enabler.enabler import pass_environment, logger
-from enabler.helpers.git import get_submodules, get_repo
-from enabler.type import semver
+from src.enabler_keitaro_inc.enabler import pass_environment, logger
+from src.enabler_keitaro_inc.helpers.git import get_submodules, get_repo
+from src.enabler_keitaro_inc.type import semver
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa

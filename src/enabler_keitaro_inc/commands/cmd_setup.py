@@ -1,4 +1,4 @@
-from enabler.cli import pass_environment, logger
+from src.enabler_keitaro_inc.enabler import pass_environment, logger
 
 import click
 import click_spinner
@@ -41,7 +41,9 @@ def init(ctx, kube_context_cli):
 
     # Load URLs from the JSON file
     enabler_path = get_path()
-    file_path = os.path.join(enabler_path, 'enabler/dependencies.yaml')
+    logger.info("Enabler path")
+    logger.info(enabler_path)
+    file_path = os.path.join(enabler_path, 'dependencies.yaml')
     with open(file_path, 'r') as f:
         urls = yaml.safe_load(f)
 
@@ -115,7 +117,7 @@ def get_latest_version_from_github(repo_url, ostype):
             logger.error("Failed to find latest release tag")
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching latest version from GitHub: {e}")
+        logger.info(f"Latest release not found")
         return None
 
 

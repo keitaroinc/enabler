@@ -1,4 +1,4 @@
-from src.enabler.enabler import pass_environment, logger
+from src.enabler_keitaro_inc.enabler import pass_environment, logger
 
 import click
 import subprocess as s
