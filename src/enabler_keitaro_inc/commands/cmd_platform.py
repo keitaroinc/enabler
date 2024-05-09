@@ -218,8 +218,6 @@ def version(ctx, kube_context_cli, submodules, repopath):
     # Get the repo from arguments defaults to cwd
     try:
         repo = get_repo(repopath)
-        logger.info("REPO")
-        logger.info(repo)
         submodules = get_submodules(repo, submodules)
     except Exception as e: # noqa
         logger.info("An error occurred while getting submodule")

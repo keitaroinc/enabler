@@ -41,8 +41,6 @@ def init(ctx, kube_context_cli):
 
     # Load URLs from the JSON file
     enabler_path = get_path()
-    logger.info("Enabler path")
-    logger.info(enabler_path)
     file_path = os.path.join(enabler_path, 'dependencies.yaml')
     with open(file_path, 'r') as f:
         urls = yaml.safe_load(f)
@@ -69,8 +67,17 @@ def init(ctx, kube_context_cli):
             logger.info(f'helm already exists at: {helm_location}')
             update_binary_if_necessary(helm_location, helm_url, ostype)
         else:
+            # download_and_make_executable(helm_url, helm_location)
             logger.info('Downloading helm...')
-            download_and_make_executable(helm_url, helm_location)
+            urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
+            tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
+            for member in tar.getmembers():
+                if member.isreg():
+                    member.name = os.path.basename(member.name)
+                    tar.extract('helm', 'bin')
+            tar.close()
+            os.remove('bin/helm.tar.gz')
+            logger.info('helm downloaded!')
 
         # Download istioctl if not exists or update if necessary
         istioctl_location = 'bin/istioctl'
@@ -78,8 +85,14 @@ def init(ctx, kube_context_cli):
             logger.info(f'istioctl already exists at: {istioctl_location}')
             update_binary_if_necessary(istioctl_location, istioctl_url, ostype)
         else:
+            # download_and_make_executable(istioctl_url, istioctl_location)
             logger.info('Downloading istioctl...')
-            download_and_make_executable(istioctl_url, istioctl_location)
+            urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
+            tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
+            tar.extract('istioctl', 'bin')
+            tar.close()
+            os.remove('bin/istioctl.tar.gz')
+            logger.info('istioctl downloaded!')
 
         # Download kind if not exists or update if necessary
         kind_location = 'bin/kind'
@@ -417,7 +430,7 @@ def istio(ctx, kube_context_cli, kube_context, monitoring_tools):
             raise click.Abort()
         if monitoring_tools == 'monitoring-tools':
             try:
-                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'enabler/grafana-vs.yaml'], capture_output=True, check=True) # noqa
+                grafana_virtual_service = s.run(['kubectl', 'apply', '-f', 'grafana-vs.yaml'], capture_output=True, check=True) # noqa
             except Exception as e:
                 logger.error('Error setting grafana URL')
                 logger.error(str(e))
