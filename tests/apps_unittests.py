@@ -1,7 +1,7 @@
 import unittest
 from click.testing import CliRunner
 from unittest.mock import patch
-from src.enabler_keitaro_inc.enabler import cli as CLI
+from src.enabler_keitaro_inc.commands.cmd_apps import cli as CLI
 
 
 class TestAppCommands(unittest.TestCase):
@@ -13,4 +13,3 @@ class TestAppCommands(unittest.TestCase):
         mock_s.run.return_value.returncode = 0
         result = self.runner.invoke(CLI, ['namespace', 'test-namespace'])
         self.assertEqual(result.exit_code, 0)
-        # self.assertIn('Namespace created successfully', result.output)
