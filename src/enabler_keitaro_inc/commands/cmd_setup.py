@@ -59,7 +59,7 @@ def init(ctx, kube_context_cli):
             logger.info(f'kubectl already exists at: {kubectl_location}')
         else:
             logger.info('Downloading kubectl...')
-            download_and_make_executable(kubectl_url, kubectl_location)
+            download_and_make_executable(kubectl_url, kubectl_location, 'kubectl') # noqa
 
         # Download helm if not exists or update if necessary
         helm_location = 'bin/helm'
@@ -67,17 +67,7 @@ def init(ctx, kube_context_cli):
             logger.info(f'helm already exists at: {helm_location}')
             update_binary_if_necessary(helm_location, helm_url, ostype)
         else:
-            # download_and_make_executable(helm_url, helm_location)
-            logger.info('Downloading helm...')
-            urllib.request.urlretrieve(helm_url, 'bin/helm.tar.gz')
-            tar = tarfile.open('bin/helm.tar.gz', 'r:gz')
-            for member in tar.getmembers():
-                if member.isreg():
-                    member.name = os.path.basename(member.name)
-                    tar.extract('helm', 'bin')
-            tar.close()
-            os.remove('bin/helm.tar.gz')
-            logger.info('helm downloaded!')
+            download_and_make_executable(helm_url, helm_location, 'helm')
 
         # Download istioctl if not exists or update if necessary
         istioctl_location = 'bin/istioctl'
@@ -85,14 +75,7 @@ def init(ctx, kube_context_cli):
             logger.info(f'istioctl already exists at: {istioctl_location}')
             update_binary_if_necessary(istioctl_location, istioctl_url, ostype)
         else:
-            # download_and_make_executable(istioctl_url, istioctl_location)
-            logger.info('Downloading istioctl...')
-            urllib.request.urlretrieve(istioctl_url, 'bin/istioctl.tar.gz')
-            tar = tarfile.open('bin/istioctl.tar.gz', 'r:gz')
-            tar.extract('istioctl', 'bin')
-            tar.close()
-            os.remove('bin/istioctl.tar.gz')
-            logger.info('istioctl downloaded!')
+            download_and_make_executable(istioctl_url, istioctl_location, 'istioctl') # noqa
 
         # Download kind if not exists or update if necessary
         kind_location = 'bin/kind'
@@ -101,7 +84,7 @@ def init(ctx, kube_context_cli):
             update_binary_if_necessary(kind_location, kind_url, ostype)
         else:
             logger.info('Downloading kind...')
-            download_and_make_executable(kind_url, kind_location)
+            download_and_make_executable(kind_url, kind_location, 'kind')
 
         # Download skaffold if not exists
         skaffold_location = 'bin/skaffold'
@@ -109,7 +92,7 @@ def init(ctx, kube_context_cli):
             logger.info(f'skaffold already exists at: {skaffold_location}')
         else:
             logger.info('Downloading skaffold...')
-            download_and_make_executable(skaffold_url, skaffold_location)
+            download_and_make_executable(skaffold_url, skaffold_location, 'skaffold') # noqa
 
     logger.info('All dependencies downloaded to bin/')
     logger.info('IMPORTANT: Please add the path to your user profile to ' +
@@ -158,11 +141,27 @@ def extract_version_from_filename(filename, binary_name):
     return None
 
 
-def download_and_make_executable(url, destination):
-    urllib.request.urlretrieve(url, destination)
-    st = os.stat(destination)
-    os.chmod(destination, st.st_mode | stat.S_IEXEC)
-    logger.info(f'{os.path.basename(destination)} downloaded and made executable!') # noqa
+def download_and_make_executable(url, destination, binary_name):
+    if binary_name in ['skaffold', 'kind', 'kubectl']:
+        urllib.request.urlretrieve(url, destination)
+        st = os.stat(destination)
+        os.chmod(destination, st.st_mode | stat.S_IEXEC)
+        logger.info(f'{os.path.basename(destination)} downloaded and made executable!') # noqa
+    elif binary_name in ['helm', 'istioctl']:
+        download_and_extract_tar(url, destination, binary_name)
+
+
+def download_and_extract_tar(url, destination, binary_name):
+    tar_filename = f'bin/{binary_name}.tar.gz'
+    urllib.request.urlretrieve(url, tar_filename)
+    tar = tarfile.open(tar_filename, 'r:gz')
+    for member in tar.getmembers():
+        if member.isreg():
+            member.name = os.path.basename(member.name)
+            tar.extract(member, 'bin')
+    tar.close()
+    os.remove(tar_filename)
+    logger.info(f'{binary_name} downloaded and made executable!')
 
 
 def update_binary_if_necessary(binary_location, binary_url, ostype):
