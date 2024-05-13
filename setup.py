@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="enabler",
     version="0.1",
-    packages=["enabler", "enabler.commands", "enabler.helpers"],
+    packages=["enabler", "src.enabler_keitaro_inc.commands", "src.enabler_keitaro_inc.helpers"], # noqa
     include_package_data=True,
     install_requires=["click==7.1.1",
                       "click-log==0.3.2",
@@ -16,6 +16,6 @@ setup(
                       "flake8>=7.0.0"],
     entry_points="""
         [console_scripts]
-        enabler=enabler.cli:cli
+        enabler=src.enabler_keitaro_inc.enabler:cli
     """,
 )

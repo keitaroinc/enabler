@@ -1,4 +1,4 @@
-from enabler.cli import pass_environment, logger
+from src.enabler_keitaro_inc.enabler import pass_environment, logger
 import pkg_resources
 import click
 

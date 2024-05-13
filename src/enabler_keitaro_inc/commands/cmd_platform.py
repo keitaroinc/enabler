@@ -1,6 +1,6 @@
-from enabler.cli import pass_environment, logger
-from enabler.helpers.git import get_submodules, get_repo
-from enabler.type import semver
+from src.enabler_keitaro_inc.enabler import pass_environment, logger
+from src.enabler_keitaro_inc.helpers.git import get_submodules, get_repo
+from src.enabler_keitaro_inc.type import semver
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -218,8 +218,6 @@ def version(ctx, kube_context_cli, submodules, repopath):
     # Get the repo from arguments defaults to cwd
     try:
         repo = get_repo(repopath)
-        logger.info("REPO")
-        logger.info(repo)
         submodules = get_submodules(repo, submodules)
     except Exception as e: # noqa
         logger.info("An error occurred while getting submodule")

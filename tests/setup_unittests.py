@@ -1,7 +1,7 @@
 import unittest
 from click.testing import CliRunner
 from unittest.mock import MagicMock, patch
-from enabler.commands.cmd_setup import cli as CLI
+from src.enabler_keitaro_inc.commands.cmd_setup import cli as CLI
 import os
 
 
@@ -9,9 +9,9 @@ class TestSetupCommands(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
 
-    @patch('enabler.commands.cmd_setup.urllib.request')
-    @patch('enabler.commands.cmd_setup.os.stat')
-    @patch('enabler.commands.cmd_setup.os.chmod')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.urllib.request')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.os.stat')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.os.chmod')
     def test_init_command(self, mock_chmod, mock_stat, mock_request):
 
         permission = 0o755
@@ -31,10 +31,10 @@ class TestSetupCommands(unittest.TestCase):
         print(result.output)
         self.assertEqual(result.exit_code, 0)
 
-    @patch('enabler.commands.cmd_setup.docker.from_env')
-    @patch('enabler.commands.cmd_setup.docker.networks')
-    @patch('enabler.commands.cmd_setup.logger')
-    @patch('enabler.commands.cmd_setup.s')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.docker.from_env')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.docker.networks')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.logger')
+    @patch('src.enabler_keitaro_inc.commands.cmd_setup.s')
     def test_metallb_command(self, mock_s, mock_logger, mock_networks, mock_from_env):  # noqa
         mock_network = MagicMock()
         mock_network['Name'] = 'kind'

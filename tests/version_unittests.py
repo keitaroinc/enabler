@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import patch
-from enabler.cli import CLI
+from src.enabler_keitaro_inc.enabler import CLI
 
 
 class TestVersionCommands(unittest.TestCase):
     def setUp(self):
         self.cli = CLI(runner=None)
 
-    @patch('enabler.cli.subprocess.run')
+    @patch('src.enabler_keitaro_inc.enabler.subprocess.run')
     def test_version_command(self, mock_subprocess_run):
         mock_subprocess_run.return_value.stdout = 'Enabler 0.1'
         version = self.cli.version_command()

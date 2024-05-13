@@ -1,4 +1,4 @@
-from enabler.cli import logger
+from src.enabler_keitaro_inc.enabler import logger
 import click
 import git
 import os
