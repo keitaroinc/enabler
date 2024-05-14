@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Enabler" # noqa
-version = "0.1" # noqa
+version = "0.1.0" # noqa
 description = "Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices." # noqa
 authors = ["Your Name <your@email.com>"]  # noqa
 
