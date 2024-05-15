@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="enabler",
-    version="0.1.1",
+    version="0.1.2",
     packages=["enabler", "src.enabler_keitaro_inc.commands", "src.enabler_keitaro_inc.helpers"], # noqa
     include_package_data=True,
     install_requires=["click==7.1.1",
