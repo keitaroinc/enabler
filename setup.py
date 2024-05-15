@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 setup(
     name="enabler",
     version="0.1.0",
