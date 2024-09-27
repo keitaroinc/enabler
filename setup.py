@@ -6,14 +6,14 @@ setup(
     version="0.1.2",
     packages=["enabler", "src.enabler_keitaro_inc.commands", "src.enabler_keitaro_inc.helpers"], # noqa
     include_package_data=True,
-    install_requires=["click==7.1.1",
+    install_requires=["click>=7.1",
                       "click-log==0.3.2",
-                      "click-spinner==0.1.8",
+                      "click-spinner>=0.1.8",
                       "docker==4.2.0",
                       "gitpython==3.1.41",
                       "paramiko>=2.7.1",
                       "semver>=2.9.1",
-                      "cryptography>=2.9.1",
+                      "cryptography==39.0.1",
                       "flake8>=7.0.0"],
     entry_points="""
         [console_scripts]
