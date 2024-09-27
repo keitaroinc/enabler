@@ -13,7 +13,7 @@ setup(
                       "gitpython==3.1.41",
                       "paramiko>=2.7.1",
                       "semver>=2.9.1",
-                      "cryptography>=39.0.1",
+                      "cryptography==39.0.1",
                       "flake8>=7.0.0"],
     entry_points="""
         [console_scripts]
