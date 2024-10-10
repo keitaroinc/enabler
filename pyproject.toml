@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "enabler_keitaro_inc"
-version = "0.1.2"
+version = "0.1.3"
 description = "Enabler is a CLI application built for making life easier when working on microservice-based applications. Through this package we can create, edit and execute custom commands to configure microservices."
 authors = ["Keitaro Inc. <info@keitaro.com>"]
 readme = "README.md"
