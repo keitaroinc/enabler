@@ -8,6 +8,6 @@ import click
 @pass_environment
 def cli(ctx, kube_context_cli):
     """Get current version of Enabler"""
-    distribution = pkg_resources.get_distribution("enabler")
+    distribution = pkg_resources.get_distribution("enabler_keitaro_inc")
     version = distribution.version
     logger.info("Enabler "+version)
